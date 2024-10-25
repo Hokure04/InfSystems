@@ -21,13 +21,13 @@ public class Expedition {
     @Column(name = "expedition_id")
     private Long expeditionId;
 
-    @Column
+    @Column(nullable = false)
     private String name;
 
-    @Column
+    @Column(name = "start_date", nullable = false)
     private LocalDate startDate;
 
-    @Column
+    @Column(name = "end_date", nullable = false)
     private LocalDate endDate;
 
     @Column
@@ -37,7 +37,28 @@ public class Expedition {
     private String status;
 
     @ManyToOne
-    @JoinColumn(name = "route_id")
+    @JoinColumn(name = "route_id", nullable = false)
     private Route route;
+
+    @OneToMany(mappedBy = "expedition", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Report> reports;
+
+    @OneToMany(mappedBy = "expedition", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Request> requests;
+
+    @OneToMany(mappedBy = "expedition", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Permit> permits;
+
+    @ManyToMany(mappedBy = "expeditionList")
+    private List<Supplies> supplyList;
+
+    @ManyToMany(mappedBy = "expeditionList")
+    private List<Equipment> equipmentList;
+
+    @ManyToMany(mappedBy = "expeditionList")
+    private List<Vehicle> vehicleList;
+
+    @ManyToMany(mappedBy = "expeditionList")
+    private List<UserInfo> userList;
 
 }
