@@ -1,7 +1,7 @@
 package org.hokurekindred.expeditionbackend.service;
 
 import org.hokurekindred.expeditionbackend.model.Expedition;
-import org.hokurekindred.expeditionbackend.model.UserInfo;
+import org.hokurekindred.expeditionbackend.model.User;
 import org.hokurekindred.expeditionbackend.repository.ExpeditionRepository;
 import org.hokurekindred.expeditionbackend.repository.UserRepository;
 import org.springframework.stereotype.Service;
@@ -37,7 +37,7 @@ public class ExpeditionService {
 
     public boolean addUserToExpedition(Long expeditionId, Long userId){
         Optional<Expedition> expeditionOptional = expeditionRepository.findById(expeditionId);
-        Optional<UserInfo> userInfoOptional = userRepository.findById(userId);
+        Optional<User> userInfoOptional = userRepository.findById(userId);
 
         if(expeditionOptional.isPresent() && userInfoOptional.isPresent()){
             Expedition expedition = expeditionOptional.get();
@@ -49,10 +49,10 @@ public class ExpeditionService {
 
     public boolean assignAdmin(Long expeditionId, Long userId){
         Optional<Expedition> expeditionOptional = expeditionRepository.findById(expeditionId);
-        Optional<UserInfo> userInfoOptional = userRepository.findById(userId);
+        Optional<User> userInfoOptional = userRepository.findById(userId);
 
         if(expeditionOptional.isPresent() && userInfoOptional.isPresent()){
-            UserInfo user = userInfoOptional.get();
+            User user = userInfoOptional.get();
             user.setExpeditionRole("Администратор");
             userRepository.save(user);
             return true;

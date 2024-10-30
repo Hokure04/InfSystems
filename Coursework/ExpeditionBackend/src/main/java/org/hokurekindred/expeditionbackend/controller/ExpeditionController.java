@@ -3,12 +3,15 @@ package org.hokurekindred.expeditionbackend.controller;
 import org.hokurekindred.expeditionbackend.model.Expedition;
 import org.hokurekindred.expeditionbackend.service.ExpeditionService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@CrossOrigin(origins = "http://localhost:4200")
 @RestController
 @RequestMapping("/api/expeditions")
+@PreAuthorize("hasRole('USER')")
 public class ExpeditionController {
     private final ExpeditionService expeditionService;
 

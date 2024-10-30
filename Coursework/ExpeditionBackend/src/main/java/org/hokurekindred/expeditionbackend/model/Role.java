@@ -1,29 +1,37 @@
 package org.hokurekindred.expeditionbackend.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 
 @Entity
 @Table(name = "role")
 @Data
 @NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class Role {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "role_id")
-    private Long roleId;
+    private Long id;
 
-    @Column
+    @Column(unique = true)
     private String name;
 
-    @ManyToMany(mappedBy = "roles")
-    private List<UserInfo> users;
+    @ManyToMany(mappedBy = "role", fetch = FetchType.EAGER)
+
+    @JsonIgnore
+    private Set<User> users;
+    @Override
+    public String toString() {
+        return String.format("Role{id=%d, name='%s'}", id, name);
+    }
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, name);
+    }
 }

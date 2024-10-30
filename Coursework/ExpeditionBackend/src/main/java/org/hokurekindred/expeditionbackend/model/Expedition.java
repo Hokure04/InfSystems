@@ -59,14 +59,14 @@ public class Expedition {
     private List<Vehicle> vehicleList;
 
     @ManyToMany(mappedBy = "expeditionList")
-    private List<UserInfo> userList;
+    private List<User> userList;
 
-    public List<UserInfo> getUsers(){
+    public List<User> getUsers(){
         return userList;
     }
 
     public boolean hasAllRoles(){
-        for(UserInfo user : userList){
+        for(User user : userList){
             if(!user.getExpeditionRole().equals("Адмимнистратор")){
                 return false;
             }
