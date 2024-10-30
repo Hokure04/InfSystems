@@ -4,6 +4,7 @@ import org.hokurekindred.expeditionbackend.model.Expedition;
 import org.hokurekindred.expeditionbackend.model.User;
 import org.hokurekindred.expeditionbackend.repository.ExpeditionRepository;
 import org.hokurekindred.expeditionbackend.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -11,13 +12,10 @@ import java.util.Optional;
 
 @Service
 public class ExpeditionService {
-    private final ExpeditionRepository expeditionRepository;
-    private final UserRepository userRepository;
-
-    public ExpeditionService(ExpeditionRepository expeditionRepository, UserRepository userRepository){
-        this.expeditionRepository = expeditionRepository;
-        this.userRepository = userRepository;
-    }
+    @Autowired
+    ExpeditionRepository expeditionRepository;
+    @Autowired
+    UserRepository userRepository;
 
     public List<Expedition> findAllExpeditions(){
         return expeditionRepository.findAll();

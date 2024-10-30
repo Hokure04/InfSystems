@@ -1,62 +1,97 @@
 package org.hokurekindred.expeditionbackend.controller;
 
 import org.hokurekindred.expeditionbackend.model.Expedition;
+import org.hokurekindred.expeditionbackend.repository.UserRepository;
 import org.hokurekindred.expeditionbackend.service.ExpeditionService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 @CrossOrigin(origins = "http://localhost:4200")
 @RestController
 @RequestMapping("/api/expeditions")
 @PreAuthorize("hasRole('USER')")
 public class ExpeditionController {
-    private final ExpeditionService expeditionService;
-
-    public ExpeditionController(ExpeditionService expeditionService){
-        this.expeditionService = expeditionService;
-    }
+    @Autowired
+    ExpeditionService expeditionService;
+    @Autowired
+    UserRepository userRepository;
 
     @GetMapping
-    public List<Expedition> getAllExpeditions(){
-        return expeditionService.findAllExpeditions();
+    public ResponseEntity<Map<String, Object>> getAllExpeditions(){
+        Map<String, Object> response = new HashMap<>();
+        response.put("expedition_list", expeditionService.findAllExpeditions());
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Expedition> getExpeditionById(@PathVariable Long id){
-        return expeditionService.findById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<Map<String, Object>> getExpeditionById(@PathVariable Long id){
+        Map<String, Object> response = new HashMap<>();
+        if (expeditionService.findById(id).isPresent()) {
+            response.put("expedition", expeditionService.findById(id));
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        }
+        response.put("error", String.format("Expedition with id %d not found", id));
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @PostMapping
-    public Expedition createExpedition(@RequestBody Expedition expedition){
-        return expeditionService.saveExpedition(expedition);
+    public ResponseEntity<Map<String, Object>> createExpedition(@RequestBody Expedition expedition){
+        Map<String, Object> response = new HashMap<>();
+        try {
+            expeditionService.saveExpedition(expedition);
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } catch (Exception e) {
+            response.put("error", "Error creating expedition");
+        }
+        return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteExpedition(@PathVariable Long id){
-        expeditionService.deleteExpedition(id);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<Map<String, Object>> deleteExpedition(@PathVariable Long id){
+        Map<String, Object> response = new HashMap<>();
+        try {
+            expeditionService.deleteExpedition(id);
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } catch (Exception e) {
+            response.put("error", "Error deleting expedition");
+        }
+        return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     @PostMapping("/{expeditionId}/add-user/{userId}")
-    public ResponseEntity<Void> addUserToExpedition(@PathVariable Long expeditionId, @PathVariable Long userId){
-        boolean added = expeditionService.addUserToExpedition(expeditionId, userId);
-        return added ? ResponseEntity.ok().build() : ResponseEntity.badRequest().build();
+    public ResponseEntity<Map<String, Object>> addUserToExpedition(@PathVariable Long expeditionId, @PathVariable Long userId){
+        Map<String, Object> response = new HashMap<>();
+        if (expeditionService.addUserToExpedition(expeditionId, userId)) {
+            response.put("expedition", expeditionService.findById(expeditionId));
+            response.put("user", userRepository.findById(userId));
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        }
+        response.put("error", "Error adding user to expedition");
+        return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     @PostMapping("/{expeditionId}/assign-admin/{userId}")
-    public ResponseEntity<Void> assignAdmin(@PathVariable Long expeditionId, @PathVariable Long userId){
-        boolean isAdminAssigned = expeditionService.assignAdmin(expeditionId, userId);
-        return isAdminAssigned ? ResponseEntity.ok().build() : ResponseEntity.badRequest().build();
+    public ResponseEntity<Map<String, Object>> assignAdmin(@PathVariable Long expeditionId, @PathVariable Long userId){
+        Map<String, Object> response = new HashMap<>();
+        if (expeditionService.assignAdmin(expeditionId, userId)) {
+            response.put("expedition", expeditionService.findById(expeditionId));
+            response.put("user", userRepository.findById(userId));
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        }
+        response.put("error", "Error assigning admin to expedition");
+        return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     @GetMapping("/{expeditionId}/check-roles")
-    public ResponseEntity<Boolean> checkRequiredRoles(@PathVariable Long expeditionId){
-        boolean hasAllRoles = expeditionService.checkRequiredRoles(expeditionId);
-        return ResponseEntity.ok(hasAllRoles);
+    public ResponseEntity<Map<String, Object>> checkRequiredRoles(@PathVariable Long expeditionId){
+        Map<String, Object> response = new HashMap<>();
+        response.put("hasRequiredRoles", expeditionService.findById(expeditionId));
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }
