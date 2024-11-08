@@ -1,5 +1,6 @@
 package org.hokurekindred.expeditionbackend.service;
 
+import org.apache.commons.math3.analysis.function.Exp;
 import org.hokurekindred.expeditionbackend.model.Expedition;
 import org.hokurekindred.expeditionbackend.model.User;
 import org.hokurekindred.expeditionbackend.repository.ExpeditionRepository;
@@ -64,6 +65,23 @@ public class ExpeditionService {
         if(expeditionOptional.isPresent()){
             Expedition expedition = expeditionOptional.get();
             return expedition.hasAllRoles();
+        }
+        return false;
+    }
+
+    // Метод для подачи заявки на участие в экспедиции
+    public boolean addPendingUser(Long expeditionId, Long userId){
+        Optional<Expedition> expeditionOptional = expeditionRepository.findById(expeditionId);
+        Optional<User> userOptional = userRepository.findById(userId);
+        if(expeditionOptional.isPresent() && userOptional.isPresent()){
+            Expedition expedition = expeditionOptional.get();
+            User user = userOptional.get();
+
+            if(!expedition.getUsers().contains(user) && !expedition.getUserApplications().containsKey(userId)){
+                expedition.getUserApplications().put(userId, "pending");
+                expeditionRepository.save(expedition);
+                return true;
+            }
         }
         return false;
     }

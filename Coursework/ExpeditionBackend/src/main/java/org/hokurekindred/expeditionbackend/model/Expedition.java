@@ -7,7 +7,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Entity
 @Table(name="expedition")
@@ -64,6 +66,10 @@ public class Expedition {
     public List<User> getUsers(){
         return userList;
     }
+
+    //Map, который будет хранить пользователь желающих присоединиться к экспедиции и их статусы
+    @ElementCollection
+    private Map<Long, String> userApplications = new HashMap<>();
 
     public boolean hasAllRoles(){
         for(User user : userList){

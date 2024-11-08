@@ -50,7 +50,7 @@ import java.util.Map;
 
 @CrossOrigin(origins = "http://localhost:4200")
 @RestController
-@RequestMapping("/api/expeditions")
+@RequestMapping("/expeditions")
 @PreAuthorize("hasRole('USER')")
 public class ExpeditionController {
     @Autowired
@@ -128,6 +128,18 @@ public class ExpeditionController {
     public ResponseEntity<Map<String, Object>> checkRequiredRoles(@PathVariable Long expeditionId){
         Map<String, Object> response = new HashMap<>();
         response.put("hasRequiredRoles", expeditionService.findById(expeditionId));
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @PostMapping("/{expeditionId}/apply/{userId}")
+    public ResponseEntity<Map<String, Object>> applyForExpedition(@PathVariable Long expeditionId, @PathVariable Long userId){
+        Map<String, Object> response = new HashMap<>();
+        boolean result = expeditionService.addPendingUser(expeditionId, userId);
+        if(result){
+            response.put("message","Application submitted successfully");
+        }else{
+            response.put("message","Application failed");
+        }
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }
