@@ -4,6 +4,8 @@ import jakarta.mail.MessagingException;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.validation.Valid;
+import org.hokurekindred.expeditionbackend.dto.LoginRequest;
+import org.hokurekindred.expeditionbackend.mapper.UserMapper;
 import org.hokurekindred.expeditionbackend.model.User;
 import org.hokurekindred.expeditionbackend.repository.RoleRepository;
 import org.hokurekindred.expeditionbackend.repository.UserRepository;
@@ -70,7 +72,7 @@ public class AuthController {
         }
         Map<String, Object> successResponse = new HashMap<>();
         successResponse.put("token", jwtTokenProvider.generateToken(user.getUsername()));
-        successResponse.put("user", user);
+        successResponse.put("user", UserMapper.INSTANCE.toLoginResponse(user));
         return new ResponseEntity<>(successResponse, HttpStatus.OK);
     }
 

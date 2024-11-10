@@ -1,4 +1,4 @@
-package org.hokurekindred.expeditionbackend.authentication;
+package org.hokurekindred.expeditionbackend.dto;
 
 import lombok.Data;
 

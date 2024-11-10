@@ -1,5 +1,6 @@
 package org.hokurekindred.expeditionbackend.authentication;
 
+import org.hokurekindred.expeditionbackend.dto.LoginRequest;
 import org.hokurekindred.expeditionbackend.model.User;
 import org.hokurekindred.expeditionbackend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
