@@ -1,9 +1,11 @@
 package org.hokurekindred.expeditionbackend.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.Objects;
 import java.util.Set;
 
 @Entity
@@ -22,5 +24,14 @@ public class Role {
 
     @ManyToMany(mappedBy = "role", fetch = FetchType.EAGER)
 
+    @JsonIgnore
     private Set<User> users;
+    @Override
+    public String toString() {
+        return String.format("Role{id=%d, name='%s'}", id, name);
+    }
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, name);
+    }
 }
