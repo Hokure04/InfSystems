@@ -1,6 +1,5 @@
 package org.hokurekindred.expeditionbackend.service;
 
-import org.apache.commons.math3.analysis.function.Exp;
 import org.hokurekindred.expeditionbackend.model.Expedition;
 import org.hokurekindred.expeditionbackend.model.User;
 import org.hokurekindred.expeditionbackend.repository.ExpeditionRepository;
@@ -40,7 +39,7 @@ public class ExpeditionService {
 
         if(expeditionOptional.isPresent() && userInfoOptional.isPresent()){
             Expedition expedition = expeditionOptional.get();
-            expedition.getUsers().add(userInfoOptional.get());
+            expedition.getUserList().add(userInfoOptional.get());
             return true;
         }
         return false;
@@ -77,7 +76,7 @@ public class ExpeditionService {
             Expedition expedition = expeditionOptional.get();
             User user = userOptional.get();
 
-            if(!expedition.getUsers().contains(user) && !expedition.getUserApplications().containsKey(userId)){
+            if(!expedition.getUserList().contains(user) && !expedition.getUserApplications().containsKey(userId)){
                 expedition.getUserApplications().put(userId, "pending");
                 expeditionRepository.save(expedition);
                 return true;

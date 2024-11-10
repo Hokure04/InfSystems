@@ -1,11 +1,13 @@
 package org.hokurekindred.expeditionbackend.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.Duration;
 import java.util.List;
 
 @Entity
@@ -22,13 +24,20 @@ public class Route {
     private Long routeId;
 
     @Column(nullable = false)
+    @NotNull(message = "Start point cannot be null")
+    @NotEmpty(message = "Start point cannot be empty")
+    @Size(min = 3, max = 100, message = "Start point must be between 3 and 100 characters")
     private String startPoint;
 
     @Column(nullable = false)
+    @NotNull(message = "End point cannot be null")
+    @NotEmpty(message = "End point cannot be empty")
+    @Size(min = 3, max = 100, message = "End point must be between 3 and 100 characters")
     private String endPoint;
 
     @Column(nullable = false)
-    private Integer duration;
+    @NotNull(message = "Duration cannot be null")
+    private Duration duration;
 
     @OneToMany(mappedBy = "route", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Location> locations;
