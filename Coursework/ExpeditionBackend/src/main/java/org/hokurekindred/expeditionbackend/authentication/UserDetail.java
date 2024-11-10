@@ -1,7 +1,5 @@
 package org.hokurekindred.expeditionbackend.authentication;
 
-
-import org.hokurekindred.expeditionbackend.repository.RoleRepository;
 import org.hokurekindred.expeditionbackend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
@@ -19,8 +17,6 @@ import java.util.stream.Collectors;
 public class UserDetail implements UserDetailsService {
 @Autowired
 private UserRepository userRepository;
-@Autowired
-private RoleRepository roleRepository;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
@@ -28,7 +24,6 @@ private RoleRepository roleRepository;
         if (user == null) {
             throw new UsernameNotFoundException(username);
         }
-        user.setRole(roleRepository.findByUsers(Set.of(user)));
         Set<GrantedAuthority> grantedAuthorities = user.getRole().stream()
                 .map(role -> new SimpleGrantedAuthority(String.format("ROLE_%s", role.getName())))
                 .collect(Collectors.toSet());

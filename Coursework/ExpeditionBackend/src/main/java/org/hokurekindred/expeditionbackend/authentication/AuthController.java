@@ -3,6 +3,7 @@ package org.hokurekindred.expeditionbackend.authentication;
 import jakarta.mail.MessagingException;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import jakarta.validation.Valid;
 import org.hokurekindred.expeditionbackend.model.User;
 import org.hokurekindred.expeditionbackend.repository.RoleRepository;
 import org.hokurekindred.expeditionbackend.repository.UserRepository;
@@ -59,10 +60,9 @@ public class AuthController {
         return "This is a secure endpoint";
     }
 
-    @PostMapping("/login/username")
-    public ResponseEntity<Map<String, Object>> loginByUsername(@RequestBody LoginRequest loginRequest) {
-        User user = userService.validateUsername(loginRequest);
-        System.out.println(loginRequest);
+    @PostMapping("/login")
+    public ResponseEntity<Map<String, Object>> loginByUsername(@Valid @RequestBody LoginRequest loginRequest) {
+        User user = userService.validateUser(loginRequest);
         if (user == null) {
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("error", "Bad login or password");
@@ -70,38 +70,18 @@ public class AuthController {
         }
         Map<String, Object> successResponse = new HashMap<>();
         successResponse.put("token", jwtTokenProvider.generateToken(user.getUsername()));
-        user.setPassword("");
-        successResponse.put("user", user);
-        return new ResponseEntity<>(successResponse, HttpStatus.OK);
-    }
-
-    @PostMapping("/login/email")
-    public ResponseEntity<Map<String, Object>> loginByEmail(@RequestBody LoginRequest loginRequest) {
-        User user = userService.validateEmail(loginRequest);
-        if (user == null) {
-            Map<String, Object> errorResponse = new HashMap<>();
-            errorResponse.put("error", "Bad email or password");
-            return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
-        }
-        Map<String, Object> successResponse = new HashMap<>();
-        successResponse.put("token", jwtTokenProvider.generateToken(user.getUsername()));
-        user.setPassword("");
         successResponse.put("user", user);
         return new ResponseEntity<>(successResponse, HttpStatus.OK);
     }
 
     @PostMapping("/register")
-    public ResponseEntity<Map<String, String>> register(@RequestBody User userRegistrationInfo) {
+    public ResponseEntity<Map<String, String>> register(@Valid @RequestBody User userRegistrationInfo) {
         Map<String, String> response = new HashMap<>();
-        if (userRegistrationInfo.getUsername() == null || userRegistrationInfo.getEmail() == null || userRegistrationInfo.getUsername().isBlank() || userRegistrationInfo.getEmail().isBlank()) {
-            response.put("error", "Email and Username are required");
-            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-        }
-        if (userService.findUserWithRolesByEmail(userRegistrationInfo.getEmail()) != null) {
+        if (userRepository.findByEmail(userRegistrationInfo.getEmail()) != null) {
             response.put("error", "Email already taken");
             return new ResponseEntity<>(response, HttpStatus.CONFLICT);
         }
-        if (userService.findUserWithRolesByUsername(userRegistrationInfo.getUsername()) != null) {
+        if (userRepository.findByUsername(userRegistrationInfo.getUsername()) != null) {
             response.put("error", "Username already taken");
             return new ResponseEntity<>(response, HttpStatus.CONFLICT);
         }
@@ -111,7 +91,7 @@ public class AuthController {
 
     @GetMapping("/send-activation")
     public ResponseEntity<Map<String, String>> sendActivation(@RequestParam("email") String email) {
-        User user = userService.findUserWithRolesByEmail(email);
+        User user = userRepository.findByEmail(email);
         String activationToken = jwtTokenProvider.generateActivateToken(email);
         Map<String, String> response = new HashMap<>();
         if (user == null) {
@@ -136,7 +116,7 @@ public class AuthController {
             response.put("error", "Invalid activation token or expired token");
             return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
         }
-        User user = userService.findUserWithRolesByEmail(jwtTokenProvider.getEmailFromActivationToken(token));
+        User user = userRepository.findByEmail(jwtTokenProvider.getEmailFromActivationToken(token));
         if (user == null) {
             response.put("error", "User not found");
             return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
@@ -147,8 +127,6 @@ public class AuthController {
         }
         user.addRoles(roleRepository.findByName("USER"));
         entityManager.clear();
-        userRepository.removeRolesByUserId(user.getId());
-        entityManager.clear();
         userRepository.save(user);
         response.put("message", "User activated successfully");
         return new ResponseEntity<>(response, HttpStatus.OK);
@@ -156,8 +134,8 @@ public class AuthController {
 
     @GetMapping("/add-administrator-role")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Map<String, String>> addAdministratorRole(@RequestParam("user") String userName) {
-        User user = userService.findUserWithRolesByUsername(userName);
+    public ResponseEntity<Map<String, String>> addAdministratorRole(@RequestParam("user") String username) {
+        User user = userRepository.findByUsername(username);
         Map<String, String> response = new HashMap<>();
         if (user == null) {
             response.put("error", "User not found");
@@ -168,18 +146,16 @@ public class AuthController {
             return new ResponseEntity<>(response, HttpStatus.CONFLICT);
         }
         entityManager.clear();
-        userRepository.removeRolesByUserId(user.getId());
         user.addRoles(roleRepository.findByName("ADMIN"));
-        entityManager.clear();
         userRepository.save(user);
-        response.put("message", String.format("User %s is now ADMIN", userName));
+        response.put("message", String.format("User %s is now ADMIN", username));
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @GetMapping("/remove-administrator-role")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Map<String, String>> removeAdministratorRole(@RequestParam("user") String userName) {
-        User user = userService.findUserWithRolesByUsername(userName);
+    public ResponseEntity<Map<String, String>> removeAdministratorRole(@RequestParam("user") String username) {
+        User user = userRepository.findByUsername(username);
         Map<String, String> response = new HashMap<>();
         if (user == null) {
             response.put("error", "User not found");
@@ -187,17 +163,15 @@ public class AuthController {
         }
         user.removeRoles(roleRepository.findByName("ADMIN"));
         entityManager.clear();
-        userRepository.removeRolesByUserId(user.getId());
-        entityManager.clear();
         userRepository.save(user);
-        response.put("message", String.format("User %s is not now ADMIN", userName));
+        response.put("message", String.format("User %s is not now ADMIN", username));
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @GetMapping("/delete-user")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Map<String, String>> deleteUser(@RequestParam("user") String userName) {
-        User user = userService.findUserWithRolesByUsername(userName);
+    public ResponseEntity<Map<String, String>> deleteUser(@RequestParam("user") String username) {
+        User user = userRepository.findByUsername(username);
         Map<String, String> response = new HashMap<>();
         if (user == null) {
             response.put("error", "User not found");
@@ -208,10 +182,8 @@ public class AuthController {
             return new ResponseEntity<>(response, HttpStatus.CONFLICT);
         }
         entityManager.clear();
-        userRepository.removeRolesByUserId(user.getId());
-        entityManager.clear();
         userRepository.delete(user);
-        response.put("message", String.format("User %s deleted", userName));
+        response.put("message", String.format("User %s deleted", username));
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }

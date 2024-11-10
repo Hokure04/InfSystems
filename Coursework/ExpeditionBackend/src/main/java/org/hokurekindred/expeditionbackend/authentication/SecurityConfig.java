@@ -30,7 +30,7 @@ public class SecurityConfig{
                 .csrf(AbstractHttpConfigurer::disable)  // Use the new way to disable CSRF
                 .authorizeHttpRequests(authorizeRequests ->
                         authorizeRequests
-                                .requestMatchers("/api/register", "/api/login/username", "/api/login/email", "/api/activate", "/api/send-activation").permitAll() // Allow these URLs
+                                .requestMatchers("/api/register", "/api/login", "/api/activate", "/api/send-activation").permitAll() // Allow these URLs
                                 .anyRequest().authenticated()// All other requests need to be authenticated
                 )
                 .sessionManagement(session -> session
