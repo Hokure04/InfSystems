@@ -25,8 +25,8 @@ public class ExpeditionService {
         return expeditionRepository.findById(id);
     }
 
-    public Expedition saveExpedition(Expedition expedition){
-        return expeditionRepository.save(expedition);
+    public void saveExpedition(Expedition expedition){
+        expeditionRepository.save(expedition);
     }
 
     public void deleteExpedition(Long id){
@@ -84,5 +84,6 @@ public class ExpeditionService {
         }
         return false;
     }
+
 
 }

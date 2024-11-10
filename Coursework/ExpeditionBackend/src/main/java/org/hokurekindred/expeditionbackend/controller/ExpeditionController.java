@@ -1,21 +1,21 @@
 package org.hokurekindred.expeditionbackend.controller;
 
+import jakarta.validation.Valid;
 import org.hokurekindred.expeditionbackend.model.Expedition;
 import org.hokurekindred.expeditionbackend.repository.UserRepository;
 import org.hokurekindred.expeditionbackend.service.ExpeditionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.Map;
 
-/*TODO
+/*TODO ✔
 Требования пользователя сайта:
-    3.1.1 Предоставлять возможность составления поста о поиске команды для экспедиции
-    3.1.2 Предоставлять возможность просмотра отчетов по экспедициям
+✔    3.1.1 Предоставлять возможность составления поста о поиске команды для экспедиции
+✔    3.1.2 Предоставлять возможность просмотра отчетов по экспедициям
     3.1.3 Предоставлять возможность просмотра профилей других пользователей с информацией о навыках и образовании
     3.1.4 Предоставлять возможность авторизоваться пользователю
     3.1.5 Предоставлять возможность оформления всех необходимых разрешений для проведения экспедиции
@@ -39,7 +39,6 @@ import java.util.Map;
     3.1.21 Предоставлять возможность добавить оборудование и транспорт, как используемые в экспедиции
     3.1.22 Предоставлять возможность рассчитывать необходимое количество топлива для транспортных средств с резервом 10%
 
-
 Требования модератора:
     3.1.23 Предоставлять возможность добавлять/редактировать/удалять маршрутов
     3.1.24 Предоставлять возможность редактировать/удалять несоответствующих действительности постов
@@ -51,7 +50,6 @@ import java.util.Map;
 @CrossOrigin(origins = "http://localhost:4200")
 @RestController
 @RequestMapping("/expeditions")
-@PreAuthorize("hasRole('USER')")
 public class ExpeditionController {
     @Autowired
     ExpeditionService expeditionService;
@@ -77,7 +75,7 @@ public class ExpeditionController {
     }
 
     @PostMapping
-    public ResponseEntity<Map<String, Object>> createExpedition(@RequestBody Expedition expedition){
+    public ResponseEntity<Map<String, Object>> createExpedition(@Valid @RequestBody Expedition expedition){
         Map<String, Object> response = new HashMap<>();
         try {
             expeditionService.saveExpedition(expedition);
