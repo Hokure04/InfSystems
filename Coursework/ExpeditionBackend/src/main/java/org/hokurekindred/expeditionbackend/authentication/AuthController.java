@@ -1,6 +1,7 @@
 package org.hokurekindred.expeditionbackend.authentication;
 
 import jakarta.validation.Valid;
+import org.hokurekindred.expeditionbackend.authentication.service.AuthService;
 import org.hokurekindred.expeditionbackend.dto.LoginRequest;
 import org.hokurekindred.expeditionbackend.model.User;
 import org.springframework.beans.factory.annotation.Autowired;

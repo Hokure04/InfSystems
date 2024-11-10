@@ -1,6 +1,7 @@
-package org.hokurekindred.expeditionbackend.authentication;
+package org.hokurekindred.expeditionbackend.authentication.service;
 
 import jakarta.mail.MessagingException;
+import org.hokurekindred.expeditionbackend.authentication.JwtTokenProvider;
 import org.hokurekindred.expeditionbackend.dto.LoginRequest;
 import org.hokurekindred.expeditionbackend.mapper.UserMapper;
 import org.hokurekindred.expeditionbackend.model.User;

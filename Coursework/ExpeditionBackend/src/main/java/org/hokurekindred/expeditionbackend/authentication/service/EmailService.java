@@ -1,4 +1,4 @@
-package org.hokurekindred.expeditionbackend.authentication;
+package org.hokurekindred.expeditionbackend.authentication.service;
 
 
 import jakarta.mail.MessagingException;
