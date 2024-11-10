@@ -1,8 +1,6 @@
 package org.hokurekindred.expeditionbackend.authentication;
 
 import jakarta.mail.MessagingException;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
 import jakarta.validation.Valid;
 import org.hokurekindred.expeditionbackend.dto.LoginRequest;
 import org.hokurekindred.expeditionbackend.mapper.UserMapper;
@@ -35,8 +33,6 @@ public class AuthController {
     private RoleRepository roleRepository;
     @Autowired
     private UserRepository userRepository;
-    @PersistenceContext
-    private EntityManager entityManager;
 
 
     @GetMapping("/admin")
@@ -113,7 +109,6 @@ public class AuthController {
     @GetMapping("/activate")
     public ResponseEntity<Map<String, String>> activateAccount(@RequestParam("token") String token) {
         Map<String, String> response = new HashMap<>();
-        System.out.println(token);
         if (!jwtTokenProvider.validateActivationToken(token)) {
             response.put("error", "Invalid activation token or expired token");
             return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
@@ -128,7 +123,6 @@ public class AuthController {
             return new ResponseEntity<>(response, HttpStatus.CONFLICT);
         }
         user.addRoles(roleRepository.findByName("USER"));
-        entityManager.clear();
         userRepository.save(user);
         response.put("message", "User activated successfully");
         return new ResponseEntity<>(response, HttpStatus.OK);
@@ -147,7 +141,6 @@ public class AuthController {
             response.put("error", "User is already admin");
             return new ResponseEntity<>(response, HttpStatus.CONFLICT);
         }
-        entityManager.clear();
         user.addRoles(roleRepository.findByName("ADMIN"));
         userRepository.save(user);
         response.put("message", String.format("User %s is now ADMIN", username));
@@ -164,7 +157,6 @@ public class AuthController {
             return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
         }
         user.removeRoles(roleRepository.findByName("ADMIN"));
-        entityManager.clear();
         userRepository.save(user);
         response.put("message", String.format("User %s is not now ADMIN", username));
         return new ResponseEntity<>(response, HttpStatus.OK);
@@ -183,7 +175,6 @@ public class AuthController {
             response.put("error", "U can not delete administrator");
             return new ResponseEntity<>(response, HttpStatus.CONFLICT);
         }
-        entityManager.clear();
         userRepository.delete(user);
         response.put("message", String.format("User %s deleted", username));
         return new ResponseEntity<>(response, HttpStatus.OK);
