@@ -140,4 +140,18 @@ public class ExpeditionController {
         }
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
+
+    @PostMapping("/{expeditionId}/reject/{userId}")
+    public ResponseEntity<Map<String, Object>> rejectUserApplication(@PathVariable Long expeditionId, @PathVariable Long userId) {
+        Map<String, Object> response = new HashMap<>();
+        boolean result = expeditionService.rejectUserApplication(expeditionId, userId);
+
+        if (result) {
+            response.put("message", "User application rejected.");
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } else {
+            response.put("error", "Failed to reject user application.");
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        }
+    }
 }

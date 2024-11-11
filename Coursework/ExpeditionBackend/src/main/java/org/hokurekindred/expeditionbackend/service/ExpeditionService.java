@@ -39,8 +39,18 @@ public class ExpeditionService {
 
         if(expeditionOptional.isPresent() && userInfoOptional.isPresent()){
             Expedition expedition = expeditionOptional.get();
-            expedition.getUserList().add(userInfoOptional.get());
-            return true;
+            User user = userInfoOptional.get();
+            String status = "pending";
+            if(status.equals(expedition.getUserApplications().get(userId))){
+                expedition.getUserList().add(user);
+                expedition.getUserApplications().put(userId, "approved");
+                expeditionRepository.save(expedition);
+                return true;
+            }else if(!expedition.getUserApplications().containsKey(userId)){
+                expedition.getUserApplications().put(userId, "pending");
+                expeditionRepository.save(expedition);
+                return true;
+            }
         }
         return false;
     }
@@ -85,5 +95,19 @@ public class ExpeditionService {
         return false;
     }
 
+    public boolean rejectUserApplication(Long expeditionId, Long userId){
+        Optional<Expedition> expeditionOptional = expeditionRepository.findById(expeditionId);
+        Optional<User> userOptional = userRepository.findById(userId);
+        if(expeditionOptional.isPresent() && userOptional.isPresent()){
+            Expedition expedition = expeditionOptional.get();
+            String status = "pending";
+            if(status.equals(expedition.getUserApplications().get(userId))){
+                expedition.getUserApplications().put(userId, "rejected");
+                expeditionRepository.save(expedition);
+                return true;
+            }
+        }
+        return false;
+    }
 
 }
