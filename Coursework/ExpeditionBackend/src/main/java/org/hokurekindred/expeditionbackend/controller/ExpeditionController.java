@@ -47,7 +47,7 @@ import java.util.Map;
  */
 
 
-@CrossOrigin(origins = "http://localhost:4200")
+@CrossOrigin(origins = "http://localhost:5173")
 @RestController
 @RequestMapping("/expeditions")
 public class ExpeditionController {

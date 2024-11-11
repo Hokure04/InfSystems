@@ -24,10 +24,10 @@ public class UserService {
 
     public User validateUser(LoginRequest loginInfo) {
         User user;
-        if (loginInfo.getEmailUsername().contains("@")) {
-            user = userRepository.findByEmail(loginInfo.getEmailUsername());
+        if (loginInfo.getLogin().contains("@")) {
+            user = userRepository.findByEmail(loginInfo.getLogin());
         } else {
-            user = userRepository.findByUsername(loginInfo.getEmailUsername());
+            user = userRepository.findByUsername(loginInfo.getLogin());
         }
         if (user != null && passwordEncoder.matches(loginInfo.getPassword(), user.getPassword())){
             return user;
