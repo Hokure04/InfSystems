@@ -47,9 +47,8 @@ public class Expedition {
     @Column
     private String status;
 
-    @NotNull(message = "Route cannot be null")
     @ManyToOne
-    @JoinColumn(name = "route_id", nullable = false)
+    @JoinColumn(name = "route_id", nullable = true)
     private Route route;
 
     @OneToMany(mappedBy = "expedition", cascade = CascadeType.ALL, orphanRemoval = true)

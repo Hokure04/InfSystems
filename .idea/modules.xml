@@ -2,6 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/Coursework/ExpeditionBackend/ExpeditionBackend.iml" filepath="$PROJECT_DIR$/Coursework/ExpeditionBackend/ExpeditionBackend.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/InfSystems.iml" filepath="$PROJECT_DIR$/.idea/InfSystems.iml" />
     </modules>
   </component>

@@ -2,6 +2,7 @@ package org.hokurekindred.expeditionbackend.controller;
 
 import jakarta.validation.Valid;
 import org.hokurekindred.expeditionbackend.model.Expedition;
+import org.hokurekindred.expeditionbackend.model.Route;
 import org.hokurekindred.expeditionbackend.repository.UserRepository;
 import org.hokurekindred.expeditionbackend.service.ExpeditionService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,7 +33,7 @@ import java.util.Map;
 Требования администратора группы:
     3.1.15 Предоставлять возможность указать необходимые роли для проведения экспедиции
     3.1.16 Предоставлять возможность назначить участника команды администратором группы
-    3.1.17 Предоставлять возможность принимать заявки пользователей к участию в экспедиции
+✔    3.1.17 Предоставлять возможность принимать заявки пользователей к участию в экспедиции - методы addUser, applyUser, rejectUser
     3.1.18 Предоставлять возможность составления маршрута проведения экспедиции
     3.1.19 Предоставлять возможность указать опасные участки маршрута, с указанием информации в чём заключается опасности
     3.1.20 Предоставлять возможность расчета цены аренды транспорта и оборудования для экспедиции
@@ -152,6 +153,63 @@ public class ExpeditionController {
         } else {
             response.put("error", "Failed to reject user application.");
             return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @PostMapping("/{expeditionId}/route")
+    public ResponseEntity<Map<String, Object>> crateRoute(@PathVariable Long expeditionId, @RequestBody Route route){
+        Map<String, Object> response = new HashMap<>();
+        try{
+            Route createdRoute = expeditionService.createRoute(expeditionId, route);
+            response.put("route", createdRoute);
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        }catch (Exception e){
+            response.put("error", "Fail while creating");
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping("/{expeditionId}/route")
+    public ResponseEntity<Map<String, Object>> getRouteByExpId(@PathVariable Long expeditionId){
+        Map<String, Object> response = new HashMap<>();
+        try{
+            Route route = expeditionService.getRouteByExpId(expeditionId);
+            response.put("route", route);
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        }catch (Exception e){
+            response.put("error", "Route not found");
+            return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @PutMapping("/{expeditionId}/route")
+    public ResponseEntity<Map<String, Object>> updateRoute(@PathVariable Long expeditionId, @RequestBody Route changedRoute){
+        Map<String, Object> response = new HashMap<>();
+        try{
+            Route route = expeditionService.updateRouteExpedition(expeditionId, changedRoute);
+            response.put("route", route);
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        }catch (Exception e){
+            response.put("error", "Fail while updating");
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @DeleteMapping("/{expeditionId}/route")
+    public ResponseEntity<Map<String, Object>> deleteRoute(@PathVariable Long expeditionId) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            boolean deletedRoute = expeditionService.deleteRoute(expeditionId);
+            if (deletedRoute) {
+                response.put("message", "Route deleted successfully");
+                return new ResponseEntity<>(response, HttpStatus.OK);
+            } else {
+                response.put("error", "Route not found");
+                return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+            }
+        } catch (Exception e) {
+            response.put("error", "Fail while deleting");
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 }
