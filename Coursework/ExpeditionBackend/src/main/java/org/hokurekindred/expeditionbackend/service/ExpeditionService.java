@@ -1,8 +1,6 @@
 package org.hokurekindred.expeditionbackend.service;
 
-import org.hokurekindred.expeditionbackend.model.Expedition;
-import org.hokurekindred.expeditionbackend.model.Route;
-import org.hokurekindred.expeditionbackend.model.User;
+import org.hokurekindred.expeditionbackend.model.*;
 import org.hokurekindred.expeditionbackend.repository.ExpeditionRepository;
 import org.hokurekindred.expeditionbackend.repository.RouteRepository;
 import org.hokurekindred.expeditionbackend.repository.UserRepository;
@@ -160,5 +158,18 @@ public class ExpeditionService {
             return true;
         }
         return false;
+    }
+
+    public Double calculateRentalCost(Long id){
+        Expedition expedition = expeditionRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Expedition not found"));
+
+        Double vehicleCost = expedition.getVehicleList().stream()
+                .mapToDouble(Vehicle::getPrice).sum();
+
+        Double equipmentCost = expedition.getEquipmentList().stream()
+                .mapToDouble(Equipment::getPrice).sum();
+
+        return vehicleCost + equipmentCost;
     }
 }

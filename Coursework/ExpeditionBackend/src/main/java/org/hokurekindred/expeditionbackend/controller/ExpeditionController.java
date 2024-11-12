@@ -36,7 +36,7 @@ import java.util.Map;
 ✔    3.1.17 Предоставлять возможность принимать заявки пользователей к участию в экспедиции - методы: addUser, applyUser, rejectUser
 ✔    3.1.18 Предоставлять возможность составления маршрута проведения экспедиции - методы: crateRoute
     3.1.19 Предоставлять возможность указать опасные участки маршрута, с указанием информации в чём заключается опасности
-    3.1.20 Предоставлять возможность расчета цены аренды транспорта и оборудования для экспедиции
+✔    3.1.20 Предоставлять возможность расчета цены аренды транспорта и оборудования для экспедиции - метод: getRentalCost
 ✔    3.1.21 Предоставлять возможность добавить оборудование и транспорт, как используемые в экспедиции - методы: assignEquipment, removeEquipment, assignVehicle, removeVehicle
 ✔    3.1.22 Предоставлять возможность рассчитывать необходимое количество топлива для транспортных средств с резервом 10% - метод: calculateFuelRequirement
 
@@ -210,6 +210,19 @@ public class ExpeditionController {
         } catch (Exception e) {
             response.put("error", "Fail while deleting");
             return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping("/{id}/rental-cost")
+    public ResponseEntity<Map<String, Object>> getRentalCost(@PathVariable Long id){
+        Map<String, Object> response = new HashMap<>();
+        try{
+            Double rentalCost = expeditionService.calculateRentalCost(id);
+            response.put("rentalCost", rentalCost);
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        }catch (Exception e){
+            response.put("error", e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
         }
     }
 }
