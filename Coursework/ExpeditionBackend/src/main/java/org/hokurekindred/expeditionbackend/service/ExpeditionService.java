@@ -132,7 +132,7 @@ public class ExpeditionService {
         if (route != null) {
             route.setStartPoint(routeChanged.getStartPoint());
             route.setEndPoint(routeChanged.getEndPoint());
-            route.setDuration(routeChanged.getDuration());
+            route.setDistance(routeChanged.getDistance());
             route.setLocations(routeChanged.getLocations());
 
             routeRepository.save(route);

@@ -36,8 +36,8 @@ public class Route {
     private String endPoint;
 
     @Column(nullable = false)
-    @NotNull(message = "Duration cannot be null")
-    private Duration duration;
+    @NotNull(message = "Distance cannot be null")
+    private Double distance;
 
     @OneToMany(mappedBy = "route", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Location> locations;

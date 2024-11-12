@@ -63,9 +63,9 @@ public class EquipmentService {
         return false;
     }
 
-    public boolean removeVehicle(Long equipmentId, Long expeditionId){
+    public boolean removeEquipment(Long equipmentId, Long expeditionId){
         Equipment equipment = equipmentRepository.findById(equipmentId)
-                .orElseThrow(() -> new RuntimeException("Vehicle not found"));
+                .orElseThrow(() -> new RuntimeException("Equipment not found"));
         Expedition expedition = expeditionRepository.findById(expeditionId)
                 .orElseThrow(() -> new RuntimeException("Expedition not found"));
 

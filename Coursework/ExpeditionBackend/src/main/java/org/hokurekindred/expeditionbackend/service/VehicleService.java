@@ -1,6 +1,7 @@
 package org.hokurekindred.expeditionbackend.service;
 
 import org.hokurekindred.expeditionbackend.model.Expedition;
+import org.hokurekindred.expeditionbackend.model.Route;
 import org.hokurekindred.expeditionbackend.model.Vehicle;
 import org.hokurekindred.expeditionbackend.repository.ExpeditionRepository;
 import org.hokurekindred.expeditionbackend.repository.VehicleRepository;
@@ -79,5 +80,27 @@ public class VehicleService {
             return true;
         }
         return false;
+    }
+
+    public Double calculateFuelRequirement(Long id, Long expeditionId){
+        Vehicle vehicle = vehicleRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Vehicle not found"));
+        Expedition expedition = expeditionRepository.findById(expeditionId)
+                .orElseThrow(() -> new RuntimeException("Expedition not found"));
+        Route route = expedition.getRoute();
+        if(route == null){
+            throw new RuntimeException("Route not assigned");
+        }
+        Double distance = route.getDistance();
+        if(distance == null){
+            throw new RuntimeException("Problem with Route distance");
+        }
+        Double fuelConsumption = vehicle.getFuelConsumption();
+        Double fuelRequired = (distance/ 100)*fuelConsumption;
+        fuelRequired += fuelRequired * 0.1;
+        if(fuelRequired > vehicle.getFuelTankCapacity()){
+            throw new RuntimeException("Fuel requirement exceeds tank capacity");
+        }
+        return fuelRequired;
     }
 }

@@ -77,9 +77,9 @@ public class EquipmentController {
 
     // Метод удаляет оборудование из экспедиции
     @DeleteMapping("/{equipmentId}/expeditions/{expeditionId}")
-    public ResponseEntity<Map<String, Object>> removeVehicle(@PathVariable Long equipmentId, @PathVariable Long expeditionId){
+    public ResponseEntity<Map<String, Object>> removeEquipment(@PathVariable Long equipmentId, @PathVariable Long expeditionId){
         Map<String, Object> response = new HashMap<>();
-        if(equipmentService.removeVehicle(equipmentId, expeditionId)){
+        if(equipmentService.removeEquipment(equipmentId, expeditionId)){
             response.put("message", "Equipment removed successfully");
             response.put("status", HttpStatus.OK);
             return new ResponseEntity<>(response, HttpStatus.OK);

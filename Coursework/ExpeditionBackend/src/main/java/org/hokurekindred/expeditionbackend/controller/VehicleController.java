@@ -90,4 +90,18 @@ public class VehicleController {
         }
     }
 
+    @GetMapping("/{vehicleId}/expeditions/{expeditionId}/calculate-fuel")
+    public ResponseEntity<Map<String, Object>> calculateFuelRequirement(@PathVariable Long vehicleId, @PathVariable Long expeditionId){
+        Map<String, Object> response = new HashMap<>();
+        try{
+            Double fuelRequired = vehicleService.calculateFuelRequirement(vehicleId, expeditionId);
+            response.put("fuelRequired", fuelRequired);
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        }catch (Exception e){
+            response.put("error", e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        }
+    }
+
+
 }
