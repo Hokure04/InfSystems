@@ -1,6 +1,7 @@
 package org.hokurekindred.expeditionbackend.controller;
 
 import jakarta.validation.Valid;
+import org.hokurekindred.expeditionbackend.model.Certificate;
 import org.hokurekindred.expeditionbackend.model.Equipment;
 import org.hokurekindred.expeditionbackend.service.EquipmentService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @CrossOrigin(origins = "http://localhost:5173")
@@ -90,4 +92,72 @@ public class EquipmentController {
         }
     }
 
+    @PostMapping("/{id}/certificates")
+    public ResponseEntity<Map<String, Object>> saveCertificate(@PathVariable Long id, @RequestBody Certificate certificate){
+        Map<String, Object> response = new HashMap<>();
+        try{
+            Certificate savedCertificate = equipmentService.saveCertificate(id, certificate);
+            response.put("message", "Certificate added successfully");
+            response.put("certificate", savedCertificate);
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        }catch (Exception e){
+            response.put("error", "Error while creating certificate " + e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @PutMapping("/{equipmentId}/certificates/{certificateId}")
+    public ResponseEntity<Map<String, Object>> updateCertificate(@PathVariable Long equipmentId, @PathVariable Long certificateId, @RequestBody Certificate changedCertificate){
+        Map<String, Object> response = new HashMap<>();
+        try{
+            Certificate certificate = equipmentService.updateCertificate(equipmentId, certificateId, changedCertificate);
+            response.put("message", "Certificate updated successfully");
+            response.put("certificate", certificate);
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        }catch (Exception e){
+            response.put("error", "Error while updating certificate " + e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+    }
+
+    @DeleteMapping("/{equipmentId}/certificates/{certificateId}")
+    public ResponseEntity<Map<String, Object>> deleteCertificate(@PathVariable Long equipmentId,@PathVariable Long certificateId){
+        Map<String, Object> response = new HashMap<>();
+        try {
+            equipmentService.deleteCertificate(equipmentId, certificateId);
+            response.put("message", "Certificate deleted successfully");
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        }catch (Exception e){
+            response.put("error", "Error while deleting certificate "+ e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping("/{equipmentId}/certificates/{certificateId}")
+    public ResponseEntity<Map<String, Object>> getCertificateById(@PathVariable Long equipmentId, @PathVariable Long certificateId){
+        Map<String, Object> response = new HashMap<>();
+        try{
+            Certificate certificate = equipmentService.getCertificateById(equipmentId, certificateId);
+            response.put("certificate", certificate);
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        }catch (Exception e){
+            response.put("error", "Certificate not found");
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+
+        }
+    }
+
+    @GetMapping("/{id}/certificates")
+    public ResponseEntity<Map<String, Object>> getAllCertificates(@PathVariable Long id){
+        Map<String, Object> response = new HashMap<>();
+        try{
+            List<Certificate> certificates = equipmentService.getAllCertificates(id);
+            response.put("certificates", certificates);
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        }catch (Exception e){
+            response.put("error", "Certificates not found");
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 }

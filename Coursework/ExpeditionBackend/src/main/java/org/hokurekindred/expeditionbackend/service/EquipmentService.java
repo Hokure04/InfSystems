@@ -1,7 +1,9 @@
 package org.hokurekindred.expeditionbackend.service;
 
+import org.hokurekindred.expeditionbackend.model.Certificate;
 import org.hokurekindred.expeditionbackend.model.Equipment;
 import org.hokurekindred.expeditionbackend.model.Expedition;
+import org.hokurekindred.expeditionbackend.repository.CertificateRepository;
 import org.hokurekindred.expeditionbackend.repository.EquipmentRepository;
 import org.hokurekindred.expeditionbackend.repository.ExpeditionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +19,9 @@ public class EquipmentService {
 
     @Autowired
     private ExpeditionRepository expeditionRepository;
+
+    @Autowired
+    private CertificateRepository certificateRepository;
 
     public List<Equipment> findAllEquipments(){
         return equipmentRepository.findAll();
@@ -74,5 +79,51 @@ public class EquipmentService {
             return true;
         }
         return false;
+    }
+
+    public Certificate saveCertificate(Long equipmentId, Certificate certificate){
+        Equipment equipment = equipmentRepository.findById(equipmentId)
+                .orElseThrow(() -> new RuntimeException("Equipment not found"));
+        certificate.setEquipment(equipment);
+        return certificateRepository.save(certificate);
+    }
+
+    public Certificate updateCertificate(Long equipmentId, Long certificateId, Certificate changedCertificate){
+        Certificate certificate = certificateRepository.findById(certificateId)
+                .orElseThrow(() -> new RuntimeException("Certificate not found"));
+
+        if(! certificate.getEquipment().getEquipmentId().equals(equipmentId)){
+            throw new RuntimeException("Certificate doesn't belong equipment");
+        }
+
+        certificate.setName(changedCertificate.getName());
+        certificate.setDescription(changedCertificate.getDescription());
+        certificate.setStatus(changedCertificate.getStatus());
+        certificate.setSerialNumber(changedCertificate.getSerialNumber());
+        return certificateRepository.save(certificate);
+    }
+
+    public void deleteCertificate(Long equipmentId, Long certificateId){
+        Certificate certificate = certificateRepository.findById(certificateId)
+                .orElseThrow(() -> new RuntimeException("Certificate not found"));
+        if(!certificate.getEquipment().getEquipmentId().equals(equipmentId)){
+            throw new RuntimeException("Certificate doesn't belong equipment");
+        }
+        certificateRepository.delete(certificate);
+    }
+
+    public Certificate getCertificateById(Long equipmentId, Long certificateId){
+        Certificate certificate = certificateRepository.findById(certificateId)
+                .orElseThrow(() -> new RuntimeException("Certificate not found"));
+        if(!certificate.getEquipment().getEquipmentId().equals(equipmentId)){
+            throw new RuntimeException("Certificate doesn't belong equipment");
+        }
+        return certificate;
+    }
+
+    public List<Certificate> getAllCertificates(Long id){
+        Equipment equipment = equipmentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Equipment not found"));
+        return equipment.getCertificates();
     }
 }
