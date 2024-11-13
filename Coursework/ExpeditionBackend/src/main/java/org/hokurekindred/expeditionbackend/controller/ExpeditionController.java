@@ -2,6 +2,8 @@ package org.hokurekindred.expeditionbackend.controller;
 
 import jakarta.validation.Valid;
 import org.hokurekindred.expeditionbackend.model.Expedition;
+import org.hokurekindred.expeditionbackend.model.Hazard;
+import org.hokurekindred.expeditionbackend.model.Location;
 import org.hokurekindred.expeditionbackend.model.Route;
 import org.hokurekindred.expeditionbackend.repository.UserRepository;
 import org.hokurekindred.expeditionbackend.service.ExpeditionService;
@@ -11,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /*TODO ✔
@@ -21,9 +24,9 @@ import java.util.Map;
 ✔    3.1.4 Предоставлять возможность авторизоваться пользователю
     3.1.5 Предоставлять возможность оформления всех необходимых разрешений для проведения экспедиции
     3.1.6 Предоставлять возможность просмотра маршрута на интерактивной карте
-    3.1.7 Предоставлять возможность ставить рейтинг сложности для локации
+✔    3.1.7 Предоставлять возможность ставить рейтинг сложности для локации - метод: addHardLevel в Expedition Service и Controller
     3.1.8 Предоставлять возможность указывать свои навыки, образование в профиле сайта
-    3.1.9 Предоставлять возможность ставить общий рейтинг для локации
+✔    3.1.9 Предоставлять возможность ставить общий рейтинг для локации - метод: addOverallRating в Expedition Service и Controller
     3.1.10 Предоставлять возможность проверки полноты соответствия имеющегося набора разрешений для экспедиции
     3.1.11 Предоставлять возможность автоматически проверять наличии у хотя бы одного члена экспедиции права на управление транспортом, участвующем в экспедиции
     3.1.12 Предоставлять возможность запрещать проведение экспедиции при отсутствии полного набора необходимых ролей для проведения экспедиции
@@ -35,7 +38,7 @@ import java.util.Map;
     3.1.16 Предоставлять возможность назначить участника команды администратором группы
 ✔    3.1.17 Предоставлять возможность принимать заявки пользователей к участию в экспедиции - методы: addUser, applyUser, rejectUser
 ✔    3.1.18 Предоставлять возможность составления маршрута проведения экспедиции - методы: crateRoute
-    3.1.19 Предоставлять возможность указать опасные участки маршрута, с указанием информации в чём заключается опасности
+✔    3.1.19 Предоставлять возможность указать опасные участки маршрута, с указанием информации в чём заключается опасности - метод: saveHazard в Expedition Service и Controller
 ✔    3.1.20 Предоставлять возможность расчета цены аренды транспорта и оборудования для экспедиции - метод: getRentalCost
 ✔    3.1.21 Предоставлять возможность добавить оборудование и транспорт, как используемые в экспедиции - методы: assignEquipment, removeEquipment, assignVehicle, removeVehicle
 ✔    3.1.22 Предоставлять возможность рассчитывать необходимое количество топлива для транспортных средств с резервом 10% - метод: calculateFuelRequirement
@@ -223,6 +226,82 @@ public class ExpeditionController {
         }catch (Exception e){
             response.put("error", e.getMessage());
             return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @GetMapping("/locations/{id}/hazards")
+    public ResponseEntity<Map<String, Object>> getAllHazards(@PathVariable Long id){
+        Map<String, Object> response = new HashMap<>();
+        try{
+            List<Hazard> hazards = expeditionService.getAllHazards(id);
+            response.put("hazards", hazards);
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        }catch (Exception e){
+            response.put("error", e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @PostMapping("/locations/{id}/hazards")
+    public ResponseEntity<Map<String, Object>> saveHazard(@PathVariable Long id, @RequestBody Hazard hazard){
+        Map<String, Object> response = new HashMap<>();
+        try{
+            Hazard createdHazard = expeditionService.saveHazard(id, hazard);
+            response.put("hazard", createdHazard);
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        }catch(Exception e){
+            response.put("error", e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @DeleteMapping("/locations/{locationId}/hazards/{hazardId}")
+    public ResponseEntity<Map<String, Object>> deleteHazard(@PathVariable Long locationId, @PathVariable Long hazardId){
+        Map<String, Object> response = new HashMap<>();
+        try{
+            boolean deletedHazard = expeditionService.deleteHazard(locationId, hazardId);
+            if(deletedHazard){
+                response.put("message", "Hazard deleted successfully");
+                return new ResponseEntity<>(response, HttpStatus.OK);
+            }else{
+                response.put("error", "Hazard not found");
+                return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+            }
+        }catch (Exception e){
+            response.put("error", e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @PutMapping("/locations/{id}/hard-level")
+    public ResponseEntity<Map<String, Object>> addHardLevel(@PathVariable Long id, @RequestParam("hardLevel") Integer hardlevel){
+        Map<String, Object> response = new HashMap<>();
+        try{
+            Location locationWithHardLevel = expeditionService.addHardLevel(id, hardlevel);
+            response.put("location", locationWithHardLevel);
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        }catch (IllegalArgumentException e){
+            response.put("error", e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        }catch (Exception e){
+            response.put("error", "Fail while adding hard level");
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @PutMapping("/locations/{id}/overall-rating")
+    public ResponseEntity<Map<String, Object>> addOverallRating(@PathVariable Long id, @RequestParam("overallRating") Double overallRating){
+        Map<String, Object> response = new HashMap<>();
+        try{
+            Location locationWithOverallRating = expeditionService.addOverallRating(id, overallRating);
+            response.put("location", locationWithOverallRating);
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        }catch (IllegalArgumentException e){
+            response.put("error", e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        }catch (Exception e){
+            response.put("error", "Fail while adding overall rating");
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 }

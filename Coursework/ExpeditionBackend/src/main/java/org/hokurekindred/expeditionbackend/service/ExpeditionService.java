@@ -1,9 +1,7 @@
 package org.hokurekindred.expeditionbackend.service;
 
 import org.hokurekindred.expeditionbackend.model.*;
-import org.hokurekindred.expeditionbackend.repository.ExpeditionRepository;
-import org.hokurekindred.expeditionbackend.repository.RouteRepository;
-import org.hokurekindred.expeditionbackend.repository.UserRepository;
+import org.hokurekindred.expeditionbackend.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -18,6 +16,10 @@ public class ExpeditionService {
     UserRepository userRepository;
     @Autowired
     private RouteRepository routeRepository;
+    @Autowired
+    private LocationRepository locationRepository;
+    @Autowired
+    private HazardRepository hazardRepository;
 
     public List<Expedition> findAllExpeditions(){
         return expeditionRepository.findAll();
@@ -171,5 +173,52 @@ public class ExpeditionService {
                 .mapToDouble(Equipment::getPrice).sum();
 
         return vehicleCost + equipmentCost;
+    }
+
+    // добавление опасности к локации
+    public Hazard saveHazard(Long id, Hazard hazard){
+        Location location = locationRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Location not found"));
+        hazard.setLocation(location);
+        return hazardRepository.save(hazard);
+    }
+
+    // удаление опасности из локации
+    public boolean deleteHazard(Long locationId, Long hazardId){
+        Location location = locationRepository.findById(locationId)
+                .orElseThrow(() -> new RuntimeException("Location not found"));
+        Optional<Hazard> hazard = hazardRepository.findById(hazardId);
+        if(hazard.isPresent() && hazard.get().getLocation().getLocationId().equals(locationId)){
+            hazardRepository.delete(hazard.get());
+            return true;
+        }
+        return false;
+    }
+
+    public List<Hazard> getAllHazards(Long id){
+        Location location = locationRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Location not found"));
+        return location.getHazards();
+    }
+
+    public Location addHardLevel(Long id, Integer hardLevel){
+        if(hardLevel < 1 || hardLevel > 10){
+            throw new IllegalArgumentException("Illegal hard level");
+        }
+        Location location = locationRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Location not found"));
+        location.setHardLevel(hardLevel);
+        return locationRepository.save(location);
+    }
+
+    public Location addOverallRating(Long id, Double overallRating){
+        if(overallRating < 0.0 || overallRating > 5.0){
+            throw new IllegalArgumentException("Illegal overall rating");
+        }
+        Location location = locationRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Location not found"));
+
+        location.setOverallRating(overallRating);
+        return locationRepository.save(location);
     }
 }
