@@ -4,6 +4,7 @@ import jakarta.mail.MessagingException;
 import org.hokurekindred.expeditionbackend.authentication.JwtTokenProvider;
 import org.hokurekindred.expeditionbackend.dto.LoginRequest;
 import org.hokurekindred.expeditionbackend.mapper.UserMapper;
+import org.hokurekindred.expeditionbackend.model.Role;
 import org.hokurekindred.expeditionbackend.model.User;
 import org.hokurekindred.expeditionbackend.repository.RoleRepository;
 import org.hokurekindred.expeditionbackend.repository.UserRepository;
@@ -89,6 +90,9 @@ public class AuthService {
         if (user.getRole().contains(roleRepository.findByName("USER"))) {
             response.put("error", "User is already activated");
             return new ResponseEntity<>(response, HttpStatus.CONFLICT);
+        }
+        if (roleRepository.findByName("USER") == null) {
+            roleRepository.save(new Role("USER"));
         }
         user.addRoles(roleRepository.findByName("USER"));
         userRepository.save(user);
