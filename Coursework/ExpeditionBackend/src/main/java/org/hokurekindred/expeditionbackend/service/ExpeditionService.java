@@ -20,6 +20,10 @@ public class ExpeditionService {
     private LocationRepository locationRepository;
     @Autowired
     private HazardRepository hazardRepository;
+    @Autowired
+    public ReportRepository reportRepository;
+    @Autowired
+    public SuppliesRepository suppliesRepository;
 
     public List<Expedition> findAllExpeditions(){
         return expeditionRepository.findAll();
@@ -220,5 +224,39 @@ public class ExpeditionService {
 
         location.setOverallRating(overallRating);
         return locationRepository.save(location);
+    }
+
+    public Supplies addSupplyToReport(Long reportId, Supplies supply){
+        Report report = reportRepository.findById(reportId)
+                .orElseThrow(() -> new RuntimeException("Report not found"));
+        supply.setReport(report);
+        Supplies changedSupply = suppliesRepository.save(supply);
+
+        report.getSuppliesList().add(changedSupply);
+        reportRepository.save(report);
+        return changedSupply;
+    }
+
+    public void removeSupplyFromReport(Long reportId, Long supplyId){
+        Report report = reportRepository.findById(reportId)
+                .orElseThrow(() -> new RuntimeException("Report not found"));
+
+        Supplies supply = suppliesRepository.findById(supplyId)
+                .orElseThrow(() -> new RuntimeException("Supply not found"));
+
+        if(!supply.getReport().getReportId().equals(reportId)){
+            throw new RuntimeException("Supplies doesn't belong report");
+        }
+
+        supply.setReport(null);
+        report.getSuppliesList().remove(supply);
+        suppliesRepository.save(supply);
+        reportRepository.save(report);
+    }
+
+    public List<Supplies> getSuppliesForReport(Long reportId){
+        Report report = reportRepository.findById(reportId)
+                .orElseThrow(() -> new RuntimeException("Report not found"));
+        return report.getSuppliesList();
     }
 }

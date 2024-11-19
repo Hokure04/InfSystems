@@ -1,10 +1,7 @@
 package org.hokurekindred.expeditionbackend.controller;
 
 import jakarta.validation.Valid;
-import org.hokurekindred.expeditionbackend.model.Expedition;
-import org.hokurekindred.expeditionbackend.model.Hazard;
-import org.hokurekindred.expeditionbackend.model.Location;
-import org.hokurekindred.expeditionbackend.model.Route;
+import org.hokurekindred.expeditionbackend.model.*;
 import org.hokurekindred.expeditionbackend.repository.UserRepository;
 import org.hokurekindred.expeditionbackend.service.ExpeditionService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,7 +27,7 @@ import java.util.Map;
     3.1.10 Предоставлять возможность проверки полноты соответствия имеющегося набора разрешений для экспедиции
     3.1.11 Предоставлять возможность автоматически проверять наличии у хотя бы одного члена экспедиции права на управление транспортом, участвующем в экспедиции
     3.1.12 Предоставлять возможность запрещать проведение экспедиции при отсутствии полного набора необходимых ролей для проведения экспедиции
-    3.1.13 Предоставлять возможность в отчете ссылаться на список запасов, которые использовались в экспедиции
+✔    3.1.13 Предоставлять возможность в отчете ссылаться на список запасов, которые использовались в экспедиции - методы: addSupplyToReport, removeSupplyFromReport, getSuppliesReport
     3.1.14 Предоставлять возможность в отчете  ссылаться на маршрут экспедиции
 
 Требования администратора группы:
@@ -45,7 +42,7 @@ import java.util.Map;
 
 Требования модератора:
 ✔    3.1.23 Предоставлять возможность добавлять/редактировать/удалять маршрутов - методы: crateRoute, updateRoute, deleteRoute
-    3.1.24 Предоставлять возможность редактировать/удалять несоответствующих действительности постов
+✔    3.1.24 Предоставлять возможность редактировать/удалять несоответствующих действительности постов
 ✔    3.1.25 Предоставлять возможность загружать/редактировать/удалять сертификаты на оборудование - методы: saveCertificate, updateCertificate, deleteCertificate в Equipment Service и Controller
     3.1.26 Предоставлять возможность загружать/редактировать/удалять информацию об оборудовании и транспорте
  */
@@ -303,5 +300,29 @@ public class ExpeditionController {
             response.put("error", "Fail while adding overall rating");
             return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
         }
+    }
+
+    @PostMapping("/reports/{reportId}/supplies")
+    public ResponseEntity<Supplies> addSupplyToReport(
+            @PathVariable Long reportId,
+            @RequestBody Supplies supply
+    ){
+        Supplies newSupply = expeditionService.addSupplyToReport(reportId, supply);
+        return new ResponseEntity<>(newSupply, HttpStatus.CREATED);
+    }
+
+    @DeleteMapping("/reports/{reportId}/supplies/{supplyId}")
+    public ResponseEntity<Void> removeSupplyFromReport(
+            @PathVariable Long reportId,
+            @PathVariable Long supplyId
+    ){
+        expeditionService.removeSupplyFromReport(reportId, supplyId);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @GetMapping("/reports/{reportId}/supplies")
+    public ResponseEntity<List<Supplies>> getSuppliesReport(@PathVariable Long reportId){
+        List<Supplies> supplies = expeditionService.getSuppliesForReport(reportId);
+        return new ResponseEntity<>(supplies, HttpStatus.OK);
     }
 }
