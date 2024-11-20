@@ -50,6 +50,20 @@ public class EquipmentController {
         return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<Map<String, Object>> updateEquipment(@PathVariable Long id, @RequestBody Equipment equipment){
+        Map<String, Object> response = new HashMap<>();
+        try{
+            Equipment changedEquipment = equipmentService.updateEquipment(id, equipment);
+            response.put("message", "Equipment updated successfully");
+            response.put("equipment", equipment);
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        }catch(Exception e){
+            response.put("error", e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+        }
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Map<String, Object>> deleteEquipment(@PathVariable Long id){
         Map<String, Object> response = new HashMap<>();

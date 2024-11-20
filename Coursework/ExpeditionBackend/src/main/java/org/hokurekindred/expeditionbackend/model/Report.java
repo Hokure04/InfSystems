@@ -9,6 +9,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Table(name = "report")
 @Data
@@ -35,4 +38,7 @@ public class Report {
     @JoinColumn(name = "expedition_id", nullable = false)
     @NotNull(message = "Expedition cannot be null")
     private Expedition expedition;
+
+    @OneToMany(mappedBy = "report", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Supplies> suppliesList = new ArrayList<>();
 }

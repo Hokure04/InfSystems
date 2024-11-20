@@ -5,8 +5,11 @@ import org.hokurekindred.expeditionbackend.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class ExpeditionService {
@@ -20,6 +23,12 @@ public class ExpeditionService {
     private LocationRepository locationRepository;
     @Autowired
     private HazardRepository hazardRepository;
+    @Autowired
+    public ReportRepository reportRepository;
+    @Autowired
+    public SuppliesRepository suppliesRepository;
+    @Autowired
+    private PermitRepository permitRepository;
 
     public List<Expedition> findAllExpeditions(){
         return expeditionRepository.findAll();
@@ -220,5 +229,112 @@ public class ExpeditionService {
 
         location.setOverallRating(overallRating);
         return locationRepository.save(location);
+    }
+
+    public Report linkSupplyToReport(Long reportId, Long supplyId){
+        Report report = reportRepository.findById(reportId)
+                .orElseThrow(() -> new RuntimeException("Report not found"));
+        Supplies supply = suppliesRepository.findById(supplyId)
+                        .orElseThrow(() -> new RuntimeException("Supply not found"));
+        supply.setReport(report);
+       suppliesRepository.save(supply);
+        return report;
+    }
+
+    public void unlinkSupplyFromReport(Long reportId, Long supplyId){
+        Report report = reportRepository.findById(reportId)
+                .orElseThrow(() -> new RuntimeException("Report not found"));
+
+        Supplies supply = suppliesRepository.findById(supplyId)
+                .orElseThrow(() -> new RuntimeException("Supply not found"));
+
+        if(!supply.getReport().getReportId().equals(reportId)){
+            throw new IllegalArgumentException("Supplies doesn't belong report");
+        }
+
+        supply.setReport(null);
+        suppliesRepository.save(supply);
+    }
+
+    public List<Supplies> getSuppliesForReport(Long reportId){
+        Report report = reportRepository.findById(reportId)
+                .orElseThrow(() -> new RuntimeException("Report not found"));
+        return suppliesRepository.findByReport(report);
+    }
+
+    public Report linkReportToRoute(Long reportId, Long routeId){
+        Report report = reportRepository.findById(reportId)
+                .orElseThrow(() -> new RuntimeException("Report not found"));
+
+        Route route = routeRepository.findById(routeId)
+                .orElseThrow(() -> new RuntimeException("Route not found"));
+
+        Expedition expedition = report.getExpedition();
+        if(expedition == null){
+            throw new RuntimeException("Report isn't link to expedition");
+        }
+        expedition.setRoute(route);
+        expeditionRepository.save(expedition);
+        return report;
+    }
+
+    public Route getRouteByReport(Long reportId){
+        Report report = reportRepository.findById(reportId)
+                .orElseThrow(() -> new RuntimeException("Report not found"));
+
+        Expedition expedition = report.getExpedition();
+        if(expedition == null){
+            throw new RuntimeException("Report isn't linked to expedition");
+        }
+
+        return expedition.getRoute();
+    }
+
+    public boolean hasAllNecessaryPermits(Long expeditionId, List<String> requiredPermits){
+        List<Permit> permits = permitRepository.findByExpedition_ExpeditionId(expeditionId);
+        Set<String> existingPermit = permits.stream()
+                .map(Permit::getPermitType)
+                .collect(Collectors.toSet());
+        return existingPermit.containsAll(requiredPermits);
+    }
+
+    public Permit createPermit(Long expeditionId, Permit permit){
+        Expedition expedition = expeditionRepository.findById(expeditionId)
+                .orElseThrow(() -> new RuntimeException("Expedition not found"));
+        permit.setExpedition(expedition);
+        return permitRepository.save(permit);
+    }
+
+    public List<Permit> getPermitsByExpeditionId(Long expeditionId){
+        return permitRepository.findByExpedition_ExpeditionId(expeditionId);
+    }
+
+    public boolean deletePermit(Long permitId){
+        if(permitRepository.existsById(permitId)){
+            permitRepository.deleteById(permitId);
+            return true;
+        }
+        return false;
+    }
+
+    public void issueMissingPermits(Long expeditionId, List<String> requiredPermits){
+        Expedition expedition = expeditionRepository.findById(expeditionId)
+                .orElseThrow(() -> new RuntimeException("expedition not found"));
+
+        List<Permit> permits = permitRepository.findByExpedition_ExpeditionId(expeditionId);
+        Set<String> existingPermits = permits.stream()
+                .map(Permit::getPermitType)
+                .collect(Collectors.toSet());
+        for(String permitType : requiredPermits){
+            if(!existingPermits.contains(permitType)){
+                Permit newPermit = Permit.builder()
+                        .permitType(permitType)
+                        .expedition(expedition)
+                        .issueDate(LocalDate.now())
+                        .authorityName("Kindred-Hokure Authority")
+                        .build();
+                permitRepository.save(newPermit);
+            }
+        }
     }
 }

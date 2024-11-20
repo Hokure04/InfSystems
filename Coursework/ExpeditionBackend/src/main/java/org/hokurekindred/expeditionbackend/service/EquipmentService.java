@@ -35,7 +35,7 @@ public class EquipmentService {
         return equipmentRepository.save(equipment);
     }
 
-    public Equipment updateVehicle(Long equipmentId, Equipment changedVehicle) {
+    public Equipment updateEquipment(Long equipmentId, Equipment changedVehicle) {
         return equipmentRepository.findById(equipmentId)
                 .map(equipment -> {
                     equipment.setName(changedVehicle.getName());

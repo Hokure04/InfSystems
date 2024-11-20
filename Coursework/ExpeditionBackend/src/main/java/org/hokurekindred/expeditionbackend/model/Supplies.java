@@ -40,4 +40,8 @@ public class Supplies {
     @ManyToMany
     @JoinTable(name = "expedition_supplies", joinColumns = @JoinColumn(name = "supply_id"), inverseJoinColumns = @JoinColumn(name = "expedition_id"))
     private List<Expedition> expeditionList;
+
+    @ManyToOne
+    @JoinColumn(name = "report_id")
+    private Report report;
 }
