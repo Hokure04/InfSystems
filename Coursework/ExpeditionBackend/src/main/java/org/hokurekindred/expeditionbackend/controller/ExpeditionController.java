@@ -27,8 +27,8 @@ import java.util.Map;
     3.1.10 Предоставлять возможность проверки полноты соответствия имеющегося набора разрешений для экспедиции
     3.1.11 Предоставлять возможность автоматически проверять наличии у хотя бы одного члена экспедиции права на управление транспортом, участвующем в экспедиции
     3.1.12 Предоставлять возможность запрещать проведение экспедиции при отсутствии полного набора необходимых ролей для проведения экспедиции
-✔    3.1.13 Предоставлять возможность в отчете ссылаться на список запасов, которые использовались в экспедиции - методы: addSupplyToReport, removeSupplyFromReport, getSuppliesReport
-    3.1.14 Предоставлять возможность в отчете  ссылаться на маршрут экспедиции
+✔    3.1.13 Предоставлять возможность в отчете ссылаться на список запасов, которые использовались в экспедиции - методы: linkSupplyToReport, unlinkingSupplyFromReport, getSuppliesReport
+✔    3.1.14 Предоставлять возможность в отчете  ссылаться на маршрут экспедиции - методы: linkReportToRoute, getRouteByReport
 
 Требования администратора группы:
     3.1.15 Предоставлять возможность указать необходимые роли для проведения экспедиции
@@ -44,7 +44,7 @@ import java.util.Map;
 ✔    3.1.23 Предоставлять возможность добавлять/редактировать/удалять маршрутов - методы: crateRoute, updateRoute, deleteRoute
 ✔    3.1.24 Предоставлять возможность редактировать/удалять несоответствующих действительности постов
 ✔    3.1.25 Предоставлять возможность загружать/редактировать/удалять сертификаты на оборудование - методы: saveCertificate, updateCertificate, deleteCertificate в Equipment Service и Controller
-    3.1.26 Предоставлять возможность загружать/редактировать/удалять информацию об оборудовании и транспорте
+✔    3.1.26 Предоставлять возможность загружать/редактировать/удалять информацию об оборудовании и транспорте - методы: createVehicle, createEquipment, deleteVehicle, deleteEquipment, updateEquipment, updateVehicle
  */
 
 
@@ -302,27 +302,96 @@ public class ExpeditionController {
         }
     }
 
-    @PostMapping("/reports/{reportId}/supplies")
-    public ResponseEntity<Supplies> addSupplyToReport(
-            @PathVariable Long reportId,
-            @RequestBody Supplies supply
-    ){
-        Supplies newSupply = expeditionService.addSupplyToReport(reportId, supply);
-        return new ResponseEntity<>(newSupply, HttpStatus.CREATED);
-    }
-
-    @DeleteMapping("/reports/{reportId}/supplies/{supplyId}")
-    public ResponseEntity<Void> removeSupplyFromReport(
+    @PutMapping("/reports/{reportId}/supplies/{supplyId}")
+    public ResponseEntity<Map<String, Object>> linkSupplyToReport(
             @PathVariable Long reportId,
             @PathVariable Long supplyId
     ){
-        expeditionService.removeSupplyFromReport(reportId, supplyId);
-        return new ResponseEntity<>(HttpStatus.OK);
+        Map<String, Object> response = new HashMap<>();
+        try{
+            Report newReport = expeditionService.linkSupplyToReport(reportId, supplyId);
+            response.put("message", "Supply linked successfully");
+            response.put("supply", newReport);
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        }catch (IllegalArgumentException e){
+            response.put("error", e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        }catch (Exception e){
+            response.put("error", "Fail while linking supply");
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @DeleteMapping("/reports/{reportId}/supplies/{supplyId}")
+    public ResponseEntity<Map<String, Object>> unlinkingSupplyFromReport(
+            @PathVariable Long reportId,
+            @PathVariable Long supplyId
+    ){
+        Map<String, Object> response = new HashMap<>();
+        try{
+            expeditionService.unlinkSupplyFromReport(reportId, supplyId);
+            response.put("message", "Supply unlinked successfully");
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        }catch (IllegalArgumentException e){
+            response.put("error", e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        }catch (Exception e){
+            response.put("error", "Fail while removing suplly");
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     @GetMapping("/reports/{reportId}/supplies")
-    public ResponseEntity<List<Supplies>> getSuppliesReport(@PathVariable Long reportId){
-        List<Supplies> supplies = expeditionService.getSuppliesForReport(reportId);
-        return new ResponseEntity<>(supplies, HttpStatus.OK);
+    public ResponseEntity<Map<String, Object>> getSuppliesReport(@PathVariable Long reportId){
+        Map<String, Object> response = new HashMap<>();
+        try{
+            List<Supplies> supplies = expeditionService.getSuppliesForReport(reportId);
+            response.put("message", "Supplies got successfully");
+            response.put("supplies", supplies);
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        }catch (IllegalArgumentException e){
+            response.put("error", e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        }catch (Exception e){
+            response.put("error", "Fail while getting supplies");
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @PutMapping("/reports/{reportId}/route/{routeId}")
+    public ResponseEntity<Map<String,Object>> linkReportToRoute(
+            @PathVariable Long reportId,
+            @PathVariable Long routeId
+    ){
+        Map<String, Object> response= new HashMap<>();
+        try{
+            Report newReport = expeditionService.linkReportToRoute(reportId, routeId);
+            response.put("message", "Route linked successfully");
+            response.put("report", newReport);
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        }catch (IllegalArgumentException e){
+            response.put("error", e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        }catch (Exception e){
+            response.put("error", "Fail while linking route");
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping("reports/{reportId}/route")
+    public ResponseEntity<Map<String, Object>> getRouteByReport(@PathVariable Long reportId){
+        Map<String, Object> response = new HashMap<>();
+        try{
+            Route route = expeditionService.getRouteByReport(reportId);
+            response.put("message", "Route got successfully");
+            response.put("route", route);
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        }catch (IllegalArgumentException e){
+            response.put("error", e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        }catch (Exception e){
+            response.put("error", "Fail while getting route");
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 }

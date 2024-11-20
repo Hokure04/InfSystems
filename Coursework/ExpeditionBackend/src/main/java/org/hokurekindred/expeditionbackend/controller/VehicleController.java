@@ -48,6 +48,20 @@ public class VehicleController {
         return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<Map<String, Object>> updateVehicle(@PathVariable Long id, @Valid @RequestBody Vehicle vehicle){
+        Map<String, Object> response = new HashMap<>();
+        try{
+            Vehicle changedVehicle = vehicleService.updateVehicle(id, vehicle);
+            response.put("message", "Vehicle updated successfully");
+            response.put("vehicle", changedVehicle);
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        }catch (RuntimeException e){
+            response.put("error", e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+        }
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Map<String, Object>> deleteVehicle(@PathVariable Long id){
         Map<String, Object> response = new HashMap<>();
@@ -102,6 +116,4 @@ public class VehicleController {
             return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
         }
     }
-
-
 }

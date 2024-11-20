@@ -226,18 +226,17 @@ public class ExpeditionService {
         return locationRepository.save(location);
     }
 
-    public Supplies addSupplyToReport(Long reportId, Supplies supply){
+    public Report linkSupplyToReport(Long reportId, Long supplyId){
         Report report = reportRepository.findById(reportId)
                 .orElseThrow(() -> new RuntimeException("Report not found"));
+        Supplies supply = suppliesRepository.findById(supplyId)
+                        .orElseThrow(() -> new RuntimeException("Supply not found"));
         supply.setReport(report);
-        Supplies changedSupply = suppliesRepository.save(supply);
-
-        report.getSuppliesList().add(changedSupply);
-        reportRepository.save(report);
-        return changedSupply;
+       suppliesRepository.save(supply);
+        return report;
     }
 
-    public void removeSupplyFromReport(Long reportId, Long supplyId){
+    public void unlinkSupplyFromReport(Long reportId, Long supplyId){
         Report report = reportRepository.findById(reportId)
                 .orElseThrow(() -> new RuntimeException("Report not found"));
 
@@ -245,18 +244,44 @@ public class ExpeditionService {
                 .orElseThrow(() -> new RuntimeException("Supply not found"));
 
         if(!supply.getReport().getReportId().equals(reportId)){
-            throw new RuntimeException("Supplies doesn't belong report");
+            throw new IllegalArgumentException("Supplies doesn't belong report");
         }
 
         supply.setReport(null);
-        report.getSuppliesList().remove(supply);
         suppliesRepository.save(supply);
-        reportRepository.save(report);
     }
 
     public List<Supplies> getSuppliesForReport(Long reportId){
         Report report = reportRepository.findById(reportId)
                 .orElseThrow(() -> new RuntimeException("Report not found"));
-        return report.getSuppliesList();
+        return suppliesRepository.findByReport(report);
+    }
+
+    public Report linkReportToRoute(Long reportId, Long routeId){
+        Report report = reportRepository.findById(reportId)
+                .orElseThrow(() -> new RuntimeException("Report not found"));
+
+        Route route = routeRepository.findById(routeId)
+                .orElseThrow(() -> new RuntimeException("Route not found"));
+
+        Expedition expedition = report.getExpedition();
+        if(expedition == null){
+            throw new RuntimeException("Report isn't link to expedition");
+        }
+        expedition.setRoute(route);
+        expeditionRepository.save(expedition);
+        return report;
+    }
+
+    public Route getRouteByReport(Long reportId){
+        Report report = reportRepository.findById(reportId)
+                .orElseThrow(() -> new RuntimeException("Report not found"));
+
+        Expedition expedition = report.getExpedition();
+        if(expedition == null){
+            throw new RuntimeException("Report isn't linked to expedition");
+        }
+
+        return expedition.getRoute();
     }
 }
