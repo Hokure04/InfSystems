@@ -37,6 +37,27 @@ public class UserController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    @PreAuthorize("hasRole('USER')")
+    @GetMapping("/profile/{username}")
+    public ResponseEntity<Map<String, Object>> getUserProfile(@PathVariable String username){
+        Map<String, Object> response = new HashMap<>();
+        User user = userRepository.findByUsername(username);
+        if(user != null){
+            Map<String, Object> userProfile = new HashMap<>();
+            userProfile.put("username", user.getUsername());
+            userProfile.put("name", user.getName() + " " + user.getSurname());
+            userProfile.put("email", user.getEmail());
+            userProfile.put("phone", user.getPhoneNumber());
+            userProfile.put("vehicleType", user.getVehicleType());
+            userProfile.put("expeditionRole", user.getExpeditionRole());
+            userProfile.put("skill", user.getSkill());
+            userProfile.put("aboutUser", user.getAboutUser());
 
+            response.put("user", userProfile);
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        }
+        response.put("error", String.format("User with %s not found", username));
+        return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+    }
 
 }
