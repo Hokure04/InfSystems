@@ -1,83 +1,310 @@
-import React, { useState } from 'react';
-import { TextField, Button, Typography, Box } from '@mui/material';
-import axios from '../api';
+import React, { useState } from "react";
+import {
+    TextField,
+    Button,
+    Grid,
+    Typography,
+    Box,
+    IconButton,
+    InputAdornment, CircularProgress, Alert,
+} from "@mui/material";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
+import api from "../api.ts";
 
 const RegistrationForm: React.FC = () => {
     const [formData, setFormData] = useState({
-        username: '',
-        email: '',
-        password: '',
-        name: '',
-        surname: '',
-        phoneNumber: '',
-        vehicleType: '',
-        expeditionRole: '',
-        skill: '',
-        aboutUser: '',
+        username: "",
+        email: "",
+        password: "",
+        confirmPassword: "",
+        name: "",
+        surname: "",
+        phoneNumber: "",
+        vehicleType: "",
+        expeditionRole: "",
+        skill: "",
+        aboutUser: "",
     });
-    const [successMessage, setSuccessMessage] = useState('');
-    const [isButtonDisabled, setIsButtonDisabled] = useState(false);
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+    const [formErrors, setFormErrors] = useState({
+        username: "",
+        email: "",
+        password: "",
+        confirmPassword: "",
+        name: "",
+        surname: "",
+        phoneNumber: "",
+    });
+
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+    const validate = () => {
+        const errors: any = {};
+
+        if (!formData.username.trim()) {
+            errors.username = "Username не может быть пустым";
+        }
+        if (!formData.email.trim() || !/\S+@\S+\.\S+/.test(formData.email)) {
+            errors.email = "Введите корректный email";
+        }
+        if (formData.password.length < 8) {
+            errors.password = "Пароль должен содержать не менее 8 символов";
+        }
+        if (formData.password !== formData.confirmPassword) {
+            errors.confirmPassword = "Пароли не совпадают";
+        }
+        if (!formData.name.trim()) {
+            errors.name = "Имя не может быть пустым";
+        }
+        if (!formData.surname.trim()) {
+            errors.surname = "Фамилия не может быть пустой";
+        }
+        if (
+            formData.phoneNumber &&
+            !/^\+?[0-9]{10,15}$/.test(formData.phoneNumber)
+        ) {
+            errors.phoneNumber = "Введите корректный номер телефона";
+        }
+
+        setFormErrors(errors);
+        return Object.keys(errors).length === 0;
     };
+    const [loading, setLoading] = useState(false);
+    const [successMessage, setSuccessMessage] = useState('');
+    const [errorMessage, setErrorMessage] = useState('');
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
+
+    const handleSubmit = async (event: React.FormEvent) => {
+        event.preventDefault();
+
+        if (!validate()) return;
+        setLoading(true);
+        setErrorMessage('');
         try {
-            await axios.post('/register', formData);
-            setSuccessMessage(`Регистрация успешна! Письмо отправлено на ${formData.email}.`);
-        } catch (error) {
-            console.error('Ошибка регистрации:', error);
+            await api.post("/register", formData);
+            setSuccessMessage(
+                `Регистрация успешна! Мы отправили письмо для активации на адрес ${formData.email}.`
+            );
+        } catch (error: any) {
+            setErrorMessage(
+                error.response?.data?.error || 'Произошла ошибка при регистрации.'
+            );
+        } finally {
+            setLoading(false);
         }
     };
 
-    const handleSendActivationAgain = async () => {
-        setIsButtonDisabled(true);
-        await axios.get(`/send-activation?email=${formData.email}`);
-        setTimeout(() => setIsButtonDisabled(false), 60000);
+    const handleRedirectToEmail = () => {
+        const emailDomain = formData.email.split('@')[1];
+        window.open(`https://${emailDomain}`, '_blank');
+    };
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setFormData({
+            ...formData,
+            [e.target.name]: e.target.value,
+        });
+
+        setFormErrors({
+            ...formErrors,
+            [e.target.name]: "",
+        });
     };
 
     return (
         <Box
-            component="form"
             sx={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 2,
-                width: '100%',
-                maxWidth: 400,
-                mx: 'auto',
-                mt: 4,
+                maxWidth: 600,
+                mx: "auto",
+                mt: 5,
+                p: 3,
+                boxShadow: 3,
+                borderRadius: 2,
             }}
-            onSubmit={handleSubmit}
         >
-            <Typography variant="h5" component="h2" textAlign="center">
+            <Typography variant="h5" mb={3} textAlign="center">
                 Регистрация
             </Typography>
-            <TextField label="Username" name="username" onChange={handleChange} required />
-            <TextField label="Email" name="email" type="email" onChange={handleChange} required />
-            <TextField label="Password" name="password" type="password" onChange={handleChange} required />
-            <TextField label="Имя" name="name" onChange={handleChange} required />
-            <TextField label="Фамилия" name="surname" onChange={handleChange} required />
-            <TextField label="Номер телефона" name="phoneNumber" onChange={handleChange} />
-            <TextField label="Тип транспортного средства" name="vehicleType" onChange={handleChange} />
-            <TextField label="Роль в экспедиции" name="expeditionRole" onChange={handleChange} />
-            <TextField label="Навык" name="skill" onChange={handleChange} />
-            <TextField label="Информация о пользователе" name="aboutUser" onChange={handleChange} multiline rows={3} />
-
-            <Button type="submit" variant="contained" color="primary">
-                Зарегистрироваться
-            </Button>
-
-            {successMessage && (
-                <Box mt={2} textAlign="center">
-                    <Typography>{successMessage}</Typography>
-                    <Button onClick={handleSendActivationAgain} disabled={isButtonDisabled} variant="outlined">
-                        Отправить письмо повторно
-                    </Button>
-                </Box>
-            )}
+            <form onSubmit={handleSubmit}>
+                <Grid container spacing={2}>
+                    <Grid item xs={12}>
+                        <TextField
+                            fullWidth
+                            label="Username"
+                            name="username"
+                            value={formData.username}
+                            onChange={handleChange}
+                            error={!!formErrors.username}
+                            helperText={formErrors.username}
+                        />
+                    </Grid>
+                    <Grid item xs={12}>
+                        <TextField
+                            fullWidth
+                            label="Email"
+                            name="email"
+                            type="email"
+                            value={formData.email}
+                            onChange={handleChange}
+                            error={!!formErrors.email}
+                            helperText={formErrors.email}
+                        />
+                    </Grid>
+                    <Grid item xs={12}>
+                        <TextField
+                            fullWidth
+                            label="Пароль"
+                            name="password"
+                            type={showPassword ? "text" : "password"}
+                            value={formData.password}
+                            onChange={handleChange}
+                            error={!!formErrors.password}
+                            helperText={formErrors.password}
+                            InputProps={{
+                                endAdornment: (
+                                    <InputAdornment position="end">
+                                        <IconButton
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            edge="end"
+                                        >
+                                            {showPassword ? <VisibilityOff /> : <Visibility />}
+                                        </IconButton>
+                                    </InputAdornment>
+                                ),
+                            }}
+                        />
+                    </Grid>
+                    <Grid item xs={12}>
+                        <TextField
+                            fullWidth
+                            label="Подтвердите пароль"
+                            name="confirmPassword"
+                            type={showConfirmPassword ? "text" : "password"}
+                            value={formData.confirmPassword}
+                            onChange={handleChange}
+                            error={!!formErrors.confirmPassword}
+                            helperText={formErrors.confirmPassword}
+                            InputProps={{
+                                endAdornment: (
+                                    <InputAdornment position="end">
+                                        <IconButton
+                                            onClick={() =>
+                                                setShowConfirmPassword(!showConfirmPassword)
+                                            }
+                                            edge="end"
+                                        >
+                                            {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+                                        </IconButton>
+                                    </InputAdornment>
+                                ),
+                            }}
+                        />
+                    </Grid>
+                    <Grid item xs={12}>
+                        <TextField
+                            fullWidth
+                            label="Имя"
+                            name="name"
+                            value={formData.name}
+                            onChange={handleChange}
+                            error={!!formErrors.name}
+                            helperText={formErrors.name}
+                        />
+                    </Grid>
+                    <Grid item xs={12}>
+                        <TextField
+                            fullWidth
+                            label="Фамилия"
+                            name="surname"
+                            value={formData.surname}
+                            onChange={handleChange}
+                            error={!!formErrors.surname}
+                            helperText={formErrors.surname}
+                        />
+                    </Grid>
+                    <Grid item xs={12}>
+                        <TextField
+                            fullWidth
+                            label="Номер телефона"
+                            name="phoneNumber"
+                            value={formData.phoneNumber}
+                            onChange={handleChange}
+                            error={!!formErrors.phoneNumber}
+                            helperText={formErrors.phoneNumber}
+                        />
+                    </Grid>
+                    <Grid item xs={12}>
+                        <TextField
+                            fullWidth
+                            label="Тип транспортного средства"
+                            name="vehicleType"
+                            value={formData.vehicleType}
+                            onChange={handleChange}
+                        />
+                    </Grid>
+                    <Grid item xs={12}>
+                        <TextField
+                            fullWidth
+                            label="Роль в экспедиции"
+                            name="expeditionRole"
+                            value={formData.expeditionRole}
+                            onChange={handleChange}
+                        />
+                    </Grid>
+                    <Grid item xs={12}>
+                        <TextField
+                            fullWidth
+                            label="Навык"
+                            name="skill"
+                            value={formData.skill}
+                            onChange={handleChange}
+                        />
+                    </Grid>
+                    <Grid item xs={12}>
+                        <TextField
+                            fullWidth
+                            label="О себе"
+                            name="aboutUser"
+                            value={formData.aboutUser}
+                            onChange={handleChange}
+                            multiline
+                            rows={4}
+                        />
+                    </Grid>
+                    {successMessage && (
+                        <Grid item xs={12}>
+                            <Alert severity="success">{successMessage}</Alert>
+                            <Button
+                                onClick={handleRedirectToEmail}
+                                variant="contained"
+                                color="primary"
+                                sx={{ mt: 2 }}
+                                fullWidth
+                            >
+                                Перейти в почту
+                            </Button>
+                        </Grid>
+                    )}
+                    {errorMessage && (
+                        <Grid item xs={12}>
+                            <Alert severity="error">{errorMessage}</Alert>
+                        </Grid>
+                    )}
+                    <Grid item xs={12}>
+                        <Button
+                            type="submit"
+                            variant="contained"
+                            color="primary"
+                            fullWidth
+                            disabled={loading}
+                            sx={{ mt: 2 }}
+                        >
+                            {loading ? <CircularProgress size={24} /> : 'Зарегистрироваться'}
+                        </Button>
+                    </Grid>
+                </Grid>
+            </form>
         </Box>
     );
 };

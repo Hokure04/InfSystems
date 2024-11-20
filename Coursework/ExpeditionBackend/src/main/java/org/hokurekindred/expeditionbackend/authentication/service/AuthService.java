@@ -44,7 +44,7 @@ public class AuthService {
         return new ResponseEntity<>(successResponse, HttpStatus.OK);
     }
 
-    public ResponseEntity<Map<String, String>> register(User userRegistrationInfo) {
+    public ResponseEntity<Map<String, String>> register(User userRegistrationInfo) throws MessagingException {
         Map<String, String> response = new HashMap<>();
         if (userRepository.findByEmail(userRegistrationInfo.getEmail()) != null) {
             response.put("error", "Email already taken");
@@ -58,7 +58,7 @@ public class AuthService {
         return sendActivation(userRegistrationInfo.getEmail());
     }
 
-    public ResponseEntity<Map<String, String>> sendActivation(String email) {
+    public ResponseEntity<Map<String, String>> sendActivation(String email) throws MessagingException {
         User user = userRepository.findByEmail(email);
         String activationToken = jwtTokenProvider.generateActivateToken(email);
         Map<String, String> response = new HashMap<>();
@@ -66,12 +66,7 @@ public class AuthService {
             response.put("error", "User not found");
             return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
         }
-        try {
-            emailService.sendActivationEmail(email, ACTIVATION_LINK + activationToken);
-        } catch (MessagingException e) {
-            response.put("error", String.format("Error sending activation email: %s", e));
-            return new ResponseEntity<>(response, HttpStatus.SERVICE_UNAVAILABLE);
-        }
+        emailService.sendActivationEmail(email, ACTIVATION_LINK + activationToken);
         response.put("message", "Activation sent successfully");
         return new ResponseEntity<>(response, HttpStatus.OK);
     }

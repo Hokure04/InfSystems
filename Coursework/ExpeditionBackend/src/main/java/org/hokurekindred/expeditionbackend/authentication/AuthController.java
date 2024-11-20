@@ -1,5 +1,6 @@
 package org.hokurekindred.expeditionbackend.authentication;
 
+import jakarta.mail.MessagingException;
 import jakarta.validation.Valid;
 import org.hokurekindred.expeditionbackend.authentication.service.AuthService;
 import org.hokurekindred.expeditionbackend.dto.LoginRequest;
@@ -48,12 +49,12 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<Map<String, String>> register(@Valid @RequestBody User userRegistrationInfo) {
+    public ResponseEntity<Map<String, String>> register(@Valid @RequestBody User userRegistrationInfo) throws MessagingException {
         return authService.register(userRegistrationInfo);
     }
 
     @GetMapping("/send-activation")
-    public ResponseEntity<Map<String, String>> sendActivation(@RequestParam("email") String email) {
+    public ResponseEntity<Map<String, String>> sendActivation(@RequestParam("email") String email) throws MessagingException {
         return authService.sendActivation(email);
     }
 
