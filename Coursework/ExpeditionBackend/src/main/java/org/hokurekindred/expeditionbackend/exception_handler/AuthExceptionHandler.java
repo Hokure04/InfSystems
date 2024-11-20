@@ -1,4 +1,4 @@
-package org.hokurekindred.expeditionbackend.controller;
+package org.hokurekindred.expeditionbackend.exception_handler;
 
 import io.jsonwebtoken.JwtException;
 import jakarta.mail.MessagingException;
@@ -18,7 +18,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @ControllerAdvice
-public class GlobalExceptionHandler {
+public class AuthExceptionHandler {
 
     @ExceptionHandler(SMTPAddressFailedException.class)
     public ResponseEntity<Map<String, String>> handleSMTPAddressFailedException(SMTPAddressFailedException ex) {
