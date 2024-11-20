@@ -68,13 +68,8 @@ public class JwtTokenProvider {
                 .compact();
     }
 
-    public boolean validateActivationToken(String token) {
-        try {
-            Jwts.parser().verifyWith(activationKey).build().parseSignedClaims(token);
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
+    public void validateActivationToken(String token) {
+        Jwts.parser().verifyWith(activationKey).build().parseSignedClaims(token);
     }
 
     public String getEmailFromActivationToken(String token) {

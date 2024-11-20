@@ -20,10 +20,7 @@ private UserRepository userRepository;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        org.hokurekindred.expeditionbackend.model.User user = userRepository.findByUsername(username);
-        if (user == null) {
-            throw new UsernameNotFoundException(username);
-        }
+        org.hokurekindred.expeditionbackend.model.User user = userRepository.findByUsername(username).orElseThrow(() -> new UsernameNotFoundException(username));
         Set<GrantedAuthority> grantedAuthorities = user.getRole().stream()
                 .map(role -> new SimpleGrantedAuthority(String.format("ROLE_%s", role.getName())))
                 .collect(Collectors.toSet());
