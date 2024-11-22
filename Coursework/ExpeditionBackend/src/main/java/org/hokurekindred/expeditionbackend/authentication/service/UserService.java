@@ -3,6 +3,7 @@ package org.hokurekindred.expeditionbackend.authentication.service;
 import jakarta.validation.ConstraintViolationException;
 import org.hokurekindred.expeditionbackend.dto.LoginRequest;
 import org.hokurekindred.expeditionbackend.exceptions.UserAlreadyExistException;
+import org.hokurekindred.expeditionbackend.exceptions.UserNotFoundException;
 import org.hokurekindred.expeditionbackend.model.User;
 import org.hokurekindred.expeditionbackend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,6 +52,26 @@ public class UserService {
             throw new BadCredentialsException("Invalid login or password");
         }
         return user;
+    }
+
+    public User updateSkills(Long userId, String skills){
+        if(skills == null || skills.isBlank()){
+            throw new IllegalArgumentException("Skill can't be empty");
+        }
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User with ID" + userId + " not found"));
+        user.setSkill(skills);
+        return userRepository.save(user);
+    }
+
+    public User updateUserInfo(Long userId, String aboutUser){
+        if(aboutUser == null || aboutUser.isBlank()){
+            throw new IllegalArgumentException("Information can't be empty");
+        }
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User with ID" + userId + "not found"));
+        user.setAboutUser(aboutUser);
+        return userRepository.save(user);
     }
 
 }

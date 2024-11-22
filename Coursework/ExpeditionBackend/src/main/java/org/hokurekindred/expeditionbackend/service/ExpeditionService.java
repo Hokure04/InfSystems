@@ -337,4 +337,19 @@ public class ExpeditionService {
             }
         }
     }
+
+    public Route getRouteWithLocations(Long expeditionId){
+        Expedition expedition = expeditionRepository.findById(expeditionId)
+                .orElseThrow(() -> new RuntimeException("Expedition not found"));
+
+        Route route = expedition.getRoute();
+        if(route != null){
+            route.setLocations(locationRepository.findByRouteRouteId(route.getRouteId()));
+        }
+        return route;
+    }
+
+    public List<Location> getLocationsForRoute(Long routeId){
+        return locationRepository.findByRouteRouteId(routeId);
+    }
 }

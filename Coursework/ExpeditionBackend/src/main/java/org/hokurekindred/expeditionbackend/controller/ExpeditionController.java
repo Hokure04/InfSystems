@@ -20,9 +20,9 @@ import java.util.Map;
 ✔    3.1.3 Предоставлять возможность просмотра профилей других пользователей с информацией о навыках и образовании - метод: getUserProfile
 ✔    3.1.4 Предоставлять возможность авторизоваться пользователю
 ✔    3.1.5 Предоставлять возможность оформления всех необходимых разрешений для проведения экспедиции - методы: issueMissingPermits, createPermit
-    3.1.6 Предоставлять возможность просмотра маршрута на интерактивной карте
+✔    3.1.6 Предоставлять возможность просмотра маршрута на интерактивной карте: getRouteWithLocations
 ✔    3.1.7 Предоставлять возможность ставить рейтинг сложности для локации - метод: addHardLevel в Expedition Service и Controller
-    3.1.8 Предоставлять возможность указывать свои навыки, образование в профиле сайта
+✔    3.1.8 Предоставлять возможность указывать свои навыки, образование в профиле сайта: updateSkills, updateUserInfo в UserService and UserController
 ✔    3.1.9 Предоставлять возможность ставить общий рейтинг для локации - метод: addOverallRating в Expedition Service и Controller
 ✔    3.1.10 Предоставлять возможность проверки полноты соответствия имеющегося набора разрешений для экспедиции - метод: checkNecessaryPermits
     3.1.11 Предоставлять возможность автоматически проверять наличии у хотя бы одного члена экспедиции права на управление транспортом, участвующем в экспедиции
@@ -475,4 +475,18 @@ public class ExpeditionController {
         }
     }
 
+    // не уверен насколько метод поможет в взаимодействии с интерактивной картой, это скорее дело фронта
+    @GetMapping("/{expeditionId}/route-with-locations")
+    public ResponseEntity<Map<String, Object>> getRouteWithLocations(@PathVariable Long expeditionId){
+        Map<String, Object> response = new HashMap<>();
+        try{
+            Route route = expeditionService.getRouteWithLocations(expeditionId);
+            response.put("route", route);
+            return new ResponseEntity<>(response, HttpStatus.OK);
+
+        } catch(Exception e){
+            response.put("error", "Route not found");
+            return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+        }
+    }
 }
