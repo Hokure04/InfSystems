@@ -10,6 +10,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -76,17 +77,32 @@ public class Expedition {
     @ElementCollection
     private Map<Long, String> userApplications = new HashMap<>();
 
+    @ElementCollection(fetch = FetchType.LAZY)
+    private List<String> requiredRoles = new ArrayList<>();
+
+
     public boolean isValidDates() {
         return startDate != null && endDate != null && !endDate.isBefore(startDate);
     }
 
-    public boolean hasAllRoles(){
+    public boolean hasRequiredRolesAssigned() {
+        for (String requiredRole : requiredRoles) {
+            boolean roleAssigned = userList.stream()
+                    .anyMatch(user -> requiredRole.equals(user.getExpeditionRole()));
+            if (!roleAssigned) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /*public boolean hasAllRoles(){
         for(User user : userList){
             if(!user.getExpeditionRole().equals("Адмимнистратор")){
                 return false;
             }
         }
         return true;
-    }
+    }*/
 
 }

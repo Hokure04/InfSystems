@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -55,7 +56,10 @@ public class ExpeditionService {
             User user = userInfoOptional.get();
             String status = "pending";
             if(status.equals(expedition.getUserApplications().get(userId))){
-                expedition.getUserList().add(user);
+                if(!expedition.getUserList().contains(user)){
+                    expedition.getUserList().add(user);
+                    user.getExpeditionList().add(expedition);
+                }
                 expedition.getUserApplications().put(userId, "approved");
                 expeditionRepository.save(expedition);
                 return true;
@@ -74,14 +78,14 @@ public class ExpeditionService {
 
         if(expeditionOptional.isPresent() && userInfoOptional.isPresent()){
             User user = userInfoOptional.get();
-            user.setExpeditionRole("Администратор");
+            user.setExpeditionRole("Admin");
             userRepository.save(user);
             return true;
         }
         return false;
     }
 
-    public boolean checkRequiredRoles(Long expeditionId){
+    /*public boolean checkRequiredRoles(Long expeditionId){
         Optional<Expedition> expeditionOptional = expeditionRepository.findById(expeditionId);
 
         if(expeditionOptional.isPresent()){
@@ -89,7 +93,7 @@ public class ExpeditionService {
             return expedition.hasAllRoles();
         }
         return false;
-    }
+    }*/
 
     // Метод для подачи заявки на участие в экспедиции
     public boolean addPendingUser(Long expeditionId, Long userId){
@@ -349,7 +353,49 @@ public class ExpeditionService {
         return route;
     }
 
-    public List<Location> getLocationsForRoute(Long routeId){
+    /*public List<Location> getLocationsForRoute(Long routeId){
         return locationRepository.findByRouteRouteId(routeId);
+    }*/
+
+    public boolean addRequiredRole(Long id, String roleName){
+        Optional<Expedition> expeditionOptional = expeditionRepository.findById(id);
+        if(expeditionOptional.isPresent()){
+            Expedition expedition = expeditionOptional.get();
+            if(!expedition.getRequiredRoles().contains(roleName)){
+                expedition.getRequiredRoles().add(roleName);
+                expeditionRepository.save(expedition);
+                return true;
+            }
+        }
+        return false;
     }
+
+    public boolean checkAllNecessaryRoles(Long id){
+        Optional<Expedition> expeditionOptional = expeditionRepository.findById(id);
+        if(expeditionOptional.isPresent()){
+            Expedition expedition = expeditionOptional.get();
+            return expedition.hasRequiredRolesAssigned();
+        }
+        return false;
+    }
+
+    public List<String> getRequiredRolesForExpedition(Long id){
+        Optional<Expedition> expeditionOptional = expeditionRepository.findById(id);
+        return expeditionOptional.map(Expedition::getRequiredRoles)
+                .orElse(Collections.emptyList());
+    }
+
+    public boolean removeRequiredRole(Long id, String roleName) {
+        Optional<Expedition> expeditionOptional = expeditionRepository.findById(id);
+        if (expeditionOptional.isPresent()) {
+            Expedition expedition = expeditionOptional.get();
+            if (expedition.getRequiredRoles().contains(roleName)) {
+                expedition.getRequiredRoles().remove(roleName);
+                expeditionRepository.save(expedition);
+                return true;
+            }
+        }
+        return false;
+    }
+
 }

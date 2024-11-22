@@ -31,7 +31,7 @@ import java.util.Map;
 ✔    3.1.14 Предоставлять возможность в отчете  ссылаться на маршрут экспедиции - методы: linkReportToRoute, getRouteByReport
 
 Требования администратора группы:
-    3.1.15 Предоставлять возможность указать необходимые роли для проведения экспедиции
+✔    3.1.15 Предоставлять возможность указать необходимые роли для проведения экспедиции: метод: addRequiredRole, getRequiredRoles, removeRequiredRole
     3.1.16 Предоставлять возможность назначить участника команды администратором группы
 ✔    3.1.17 Предоставлять возможность принимать заявки пользователей к участию в экспедиции - методы: addUser, applyUser, rejectUser
 ✔    3.1.18 Предоставлять возможность составления маршрута проведения экспедиции - методы: crateRoute
@@ -123,12 +123,12 @@ public class ExpeditionController {
         return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-    @GetMapping("/{expeditionId}/check-roles")
+    /*@GetMapping("/{expeditionId}/check-roles")
     public ResponseEntity<Map<String, Object>> checkRequiredRoles(@PathVariable Long expeditionId){
         Map<String, Object> response = new HashMap<>();
         response.put("hasRequiredRoles", expeditionService.findById(expeditionId));
         return new ResponseEntity<>(response, HttpStatus.OK);
-    }
+    }*/
 
     @PostMapping("/{expeditionId}/apply/{userId}")
     public ResponseEntity<Map<String, Object>> applyForExpedition(@PathVariable Long expeditionId, @PathVariable Long userId){
@@ -489,4 +489,48 @@ public class ExpeditionController {
             return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
         }
     }
+
+    @PostMapping("/{id}/add-role")
+    public ResponseEntity<Map<String, Object>> addRequiredRole(@PathVariable Long id, @RequestBody String roleName){
+        Map<String, Object> response = new HashMap<>();
+        if(expeditionService.addRequiredRole(id, roleName)){
+            response.put("message", "Role added successfully");
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        }
+        response.put("error", "Fail while adding role");
+        return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @GetMapping("/{id}/check-roles")
+    public ResponseEntity<Map<String, Object>> checkAllNecessaryRoles(@PathVariable Long id){
+        Map<String, Object> response = new HashMap<>();
+        boolean allRoles = expeditionService.checkAllNecessaryRoles(id);
+        response.put("allRoles", allRoles);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @GetMapping("/{id}/required-roles")
+    public ResponseEntity<Map<String, Object>> getRequiredRoles(@PathVariable Long id){
+        Map<String, Object> response = new HashMap<>();
+        try{
+            List<String> requiredRoles = expeditionService.getRequiredRolesForExpedition(id);
+            response.put("requiredRoles", requiredRoles);
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        }catch (Exception e){
+            response.put("error", "Fail while getting roles");
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @DeleteMapping("/{id}/remove-role")
+    public ResponseEntity<Map<String, Object>> removeRequiredRole(@PathVariable Long id, @RequestBody String roleName) {
+        Map<String, Object> response = new HashMap<>();
+        if (expeditionService.removeRequiredRole(id, roleName)) {
+            response.put("message", "Role removed successfully");
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        }
+        response.put("error", "Fail while removing role");
+        return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
 }
