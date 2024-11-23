@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.HashMap;
 import java.util.List;
@@ -58,65 +59,50 @@ public class ExpeditionController {
     UserRepository userRepository;
 
     @GetMapping
-    public ResponseEntity<Map<String, Object>> getAllExpeditions(){
+    public ResponseEntity<Map<String, Object>> getAllExpeditions() {
         Map<String, Object> response = new HashMap<>();
         response.put("expedition_list", expeditionService.findAllExpeditions());
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Map<String, Object>> getExpeditionById(@PathVariable Long id){
+    public ResponseEntity<Map<String, Object>> getExpeditionById(@PathVariable Long id) {
         Map<String, Object> response = new HashMap<>();
         if (expeditionService.findById(id).isPresent()) {
             response.put("expedition", expeditionService.findById(id));
             return new ResponseEntity<>(response, HttpStatus.OK);
         }
-        response.put("error", String.format("Expedition with id %d not found", id));
-        return new ResponseEntity<>(response, HttpStatus.OK);
+        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Expedition not found");
     }
 
     @PostMapping
-    public ResponseEntity<Map<String, Object>> createExpedition(@Valid @RequestBody Expedition expedition){
+    public ResponseEntity<Map<String, Object>> createExpedition(@Valid @RequestBody Expedition expedition) {
         Map<String, Object> response = new HashMap<>();
-        try {
-            expeditionService.saveExpedition(expedition);
-            return new ResponseEntity<>(response, HttpStatus.OK);
-        } catch (Exception e) {
-            response.put("error", "Error creating expedition");
-        }
-        return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        expeditionService.saveExpedition(expedition);
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Map<String, Object>> deleteExpedition(@PathVariable Long id){
+    public ResponseEntity<Map<String, Object>> deleteExpedition(@PathVariable Long id) {
         Map<String, Object> response = new HashMap<>();
-        try {
-            expeditionService.deleteExpedition(id);
-            return new ResponseEntity<>(response, HttpStatus.OK);
-        } catch (Exception e) {
-            response.put("error", "Error deleting expedition");
-        }
-        return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+
+        expeditionService.deleteExpedition(id);
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @PostMapping("/{expeditionId}/add-user/{userId}")
-    public ResponseEntity<Map<String, Object>> addUserToExpedition(@PathVariable Long expeditionId, @PathVariable Long userId){
+    public ResponseEntity<Map<String, Object>> addUserToExpedition(@PathVariable Long expeditionId, @PathVariable Long userId) {
         Map<String, Object> response = new HashMap<>();
         if (expeditionService.addUserToExpedition(expeditionId, userId)) {
             response.put("expedition", expeditionService.findById(expeditionId));
             response.put("user", userRepository.findById(userId));
             return new ResponseEntity<>(response, HttpStatus.OK);
         }
-        response.put("error", "Error adding user to expedition");
-        return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Can not add user to expedition");
     }
 
     @PostMapping("/{expeditionId}/assign-admin")
-    public ResponseEntity<Map<String, Object>> assignAdmin(
-            @PathVariable Long expeditionId,
-            @RequestParam Long userId,
-            @RequestParam Long adminId
-    ){
+    public ResponseEntity<Map<String, Object>> assignAdmin(@PathVariable Long expeditionId, @RequestParam Long userId, @RequestParam Long adminId) {
         Map<String, Object> response = new HashMap<>();
         if (expeditionService.assignAdmin(expeditionId, userId, adminId)) {
             response.put("message", "User successfully assigned as admin");
@@ -124,8 +110,7 @@ public class ExpeditionController {
             response.put("user", userRepository.findById(userId));
             return new ResponseEntity<>(response, HttpStatus.OK);
         }
-        response.put("error", "Error assigning admin to expedition");
-        return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Error assigning admin to expedition");
     }
 
     /*@GetMapping("/{expeditionId}/check-roles")
@@ -136,13 +121,13 @@ public class ExpeditionController {
     }*/
 
     @PostMapping("/{expeditionId}/apply/{userId}")
-    public ResponseEntity<Map<String, Object>> applyForExpedition(@PathVariable Long expeditionId, @PathVariable Long userId){
+    public ResponseEntity<Map<String, Object>> applyForExpedition(@PathVariable Long expeditionId, @PathVariable Long userId) {
         Map<String, Object> response = new HashMap<>();
         boolean result = expeditionService.addPendingUser(expeditionId, userId);
-        if(result){
-            response.put("message","Application submitted successfully");
-        }else{
-            response.put("message","Application failed");
+        if (result) {
+            response.put("message", "Application submitted successfully");
+        } else {
+            response.put("message", "Application failed");
         }
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
@@ -155,359 +140,218 @@ public class ExpeditionController {
         if (result) {
             response.put("message", "User application rejected.");
             return new ResponseEntity<>(response, HttpStatus.OK);
-        } else {
-            response.put("error", "Failed to reject user application.");
-            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
         }
+        throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Failed to reject user application.");
     }
 
     @PostMapping("/{expeditionId}/route")
-    public ResponseEntity<Map<String, Object>> crateRoute(@PathVariable Long expeditionId, @RequestBody Route route){
+    public ResponseEntity<Map<String, Object>> crateRoute(@PathVariable Long expeditionId, @RequestBody Route route) {
         Map<String, Object> response = new HashMap<>();
-        try{
-            Route createdRoute = expeditionService.createRoute(expeditionId, route);
-            response.put("route", createdRoute);
-            return new ResponseEntity<>(response, HttpStatus.OK);
-        }catch (Exception e){
-            response.put("error", "Fail while creating");
-            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        Route createdRoute = expeditionService.createRoute(expeditionId, route);
+        response.put("route", createdRoute);
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @GetMapping("/{expeditionId}/route")
-    public ResponseEntity<Map<String, Object>> getRouteByExpId(@PathVariable Long expeditionId){
+    public ResponseEntity<Map<String, Object>> getRouteByExpId(@PathVariable Long expeditionId) {
         Map<String, Object> response = new HashMap<>();
-        try{
-            Route route = expeditionService.getRouteByExpId(expeditionId);
-            response.put("route", route);
-            return new ResponseEntity<>(response, HttpStatus.OK);
-        }catch (Exception e){
-            response.put("error", "Route not found");
-            return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
-        }
+        Route route = expeditionService.getRouteByExpId(expeditionId);
+        response.put("route", route);
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @PutMapping("/{expeditionId}/route")
-    public ResponseEntity<Map<String, Object>> updateRoute(@PathVariable Long expeditionId, @RequestBody Route changedRoute){
+    public ResponseEntity<Map<String, Object>> updateRoute(@PathVariable Long expeditionId, @RequestBody Route changedRoute) {
         Map<String, Object> response = new HashMap<>();
-        try{
-            Route route = expeditionService.updateRouteExpedition(expeditionId, changedRoute);
-            response.put("route", route);
-            return new ResponseEntity<>(response, HttpStatus.OK);
-        }catch (Exception e){
-            response.put("error", "Fail while updating");
-            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        Route route = expeditionService.updateRouteExpedition(expeditionId, changedRoute);
+        response.put("route", route);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+
     }
 
     @DeleteMapping("/{expeditionId}/route")
     public ResponseEntity<Map<String, Object>> deleteRoute(@PathVariable Long expeditionId) {
         Map<String, Object> response = new HashMap<>();
-        try {
-            boolean deletedRoute = expeditionService.deleteRoute(expeditionId);
-            if (deletedRoute) {
-                response.put("message", "Route deleted successfully");
-                return new ResponseEntity<>(response, HttpStatus.OK);
-            } else {
-                response.put("error", "Route not found");
-                return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
-            }
-        } catch (Exception e) {
-            response.put("error", "Fail while deleting");
-            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    @GetMapping("/{id}/rental-cost")
-    public ResponseEntity<Map<String, Object>> getRentalCost(@PathVariable Long id){
-        Map<String, Object> response = new HashMap<>();
-        try{
-            Double rentalCost = expeditionService.calculateRentalCost(id);
-            response.put("rentalCost", rentalCost);
+        boolean deletedRoute = expeditionService.deleteRoute(expeditionId);
+        if (deletedRoute) {
+            response.put("message", "Route deleted successfully");
             return new ResponseEntity<>(response, HttpStatus.OK);
-        }catch (Exception e){
-            response.put("error", e.getMessage());
-            return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
-        }
-    }
-
-    @GetMapping("/locations/{id}/hazards")
-    public ResponseEntity<Map<String, Object>> getAllHazards(@PathVariable Long id){
-        Map<String, Object> response = new HashMap<>();
-        try{
-            List<Hazard> hazards = expeditionService.getAllHazards(id);
-            response.put("hazards", hazards);
-            return new ResponseEntity<>(response, HttpStatus.OK);
-        }catch (Exception e){
-            response.put("error", e.getMessage());
-            return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
-        }
-    }
-
-    @PostMapping("/locations/{id}/hazards")
-    public ResponseEntity<Map<String, Object>> saveHazard(@PathVariable Long id, @RequestBody Hazard hazard){
-        Map<String, Object> response = new HashMap<>();
-        try{
-            Hazard createdHazard = expeditionService.saveHazard(id, hazard);
-            response.put("hazard", createdHazard);
-            return new ResponseEntity<>(response, HttpStatus.OK);
-        }catch(Exception e){
-            response.put("error", e.getMessage());
-            return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
-        }
-    }
-
-    @DeleteMapping("/locations/{locationId}/hazards/{hazardId}")
-    public ResponseEntity<Map<String, Object>> deleteHazard(@PathVariable Long locationId, @PathVariable Long hazardId){
-        Map<String, Object> response = new HashMap<>();
-        try{
-            boolean deletedHazard = expeditionService.deleteHazard(locationId, hazardId);
-            if(deletedHazard){
-                response.put("message", "Hazard deleted successfully");
-                return new ResponseEntity<>(response, HttpStatus.OK);
-            }else{
-                response.put("error", "Hazard not found");
-                return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
-            }
-        }catch (Exception e){
-            response.put("error", e.getMessage());
-            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    @PutMapping("/locations/{id}/hard-level")
-    public ResponseEntity<Map<String, Object>> addHardLevel(@PathVariable Long id, @RequestParam("hardLevel") Integer hardlevel){
-        Map<String, Object> response = new HashMap<>();
-        try{
-            Location locationWithHardLevel = expeditionService.addHardLevel(id, hardlevel);
-            response.put("location", locationWithHardLevel);
-            return new ResponseEntity<>(response, HttpStatus.OK);
-        }catch (IllegalArgumentException e){
-            response.put("error", e.getMessage());
-            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-        }catch (Exception e){
-            response.put("error", "Fail while adding hard level");
-            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    @PutMapping("/locations/{id}/overall-rating")
-    public ResponseEntity<Map<String, Object>> addOverallRating(@PathVariable Long id, @RequestParam("overallRating") Double overallRating){
-        Map<String, Object> response = new HashMap<>();
-        try{
-            Location locationWithOverallRating = expeditionService.addOverallRating(id, overallRating);
-            response.put("location", locationWithOverallRating);
-            return new ResponseEntity<>(response, HttpStatus.OK);
-        }catch (IllegalArgumentException e){
-            response.put("error", e.getMessage());
-            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-        }catch (Exception e){
-            response.put("error", "Fail while adding overall rating");
-            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    @PutMapping("/reports/{reportId}/supplies/{supplyId}")
-    public ResponseEntity<Map<String, Object>> linkSupplyToReport(
-            @PathVariable Long reportId,
-            @PathVariable Long supplyId
-    ){
-        Map<String, Object> response = new HashMap<>();
-        try{
-            Report newReport = expeditionService.linkSupplyToReport(reportId, supplyId);
-            response.put("message", "Supply linked successfully");
-            response.put("supply", newReport);
-            return new ResponseEntity<>(response, HttpStatus.OK);
-        }catch (IllegalArgumentException e){
-            response.put("error", e.getMessage());
-            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-        }catch (Exception e){
-            response.put("error", "Fail while linking supply");
-            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    @DeleteMapping("/reports/{reportId}/supplies/{supplyId}")
-    public ResponseEntity<Map<String, Object>> unlinkingSupplyFromReport(
-            @PathVariable Long reportId,
-            @PathVariable Long supplyId
-    ){
-        Map<String, Object> response = new HashMap<>();
-        try{
-            expeditionService.unlinkSupplyFromReport(reportId, supplyId);
-            response.put("message", "Supply unlinked successfully");
-            return new ResponseEntity<>(response, HttpStatus.OK);
-        }catch (IllegalArgumentException e){
-            response.put("error", e.getMessage());
-            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-        }catch (Exception e){
-            response.put("error", "Fail while removing suplly");
-            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    @GetMapping("/reports/{reportId}/supplies")
-    public ResponseEntity<Map<String, Object>> getSuppliesReport(@PathVariable Long reportId){
-        Map<String, Object> response = new HashMap<>();
-        try{
-            List<Supplies> supplies = expeditionService.getSuppliesForReport(reportId);
-            response.put("message", "Supplies got successfully");
-            response.put("supplies", supplies);
-            return new ResponseEntity<>(response, HttpStatus.OK);
-        }catch (IllegalArgumentException e){
-            response.put("error", e.getMessage());
-            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-        }catch (Exception e){
-            response.put("error", "Fail while getting supplies");
-            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    @PutMapping("/reports/{reportId}/route/{routeId}")
-    public ResponseEntity<Map<String,Object>> linkReportToRoute(
-            @PathVariable Long reportId,
-            @PathVariable Long routeId
-    ){
-        Map<String, Object> response= new HashMap<>();
-        try{
-            Report newReport = expeditionService.linkReportToRoute(reportId, routeId);
-            response.put("message", "Route linked successfully");
-            response.put("report", newReport);
-            return new ResponseEntity<>(response, HttpStatus.OK);
-        }catch (IllegalArgumentException e){
-            response.put("error", e.getMessage());
-            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-        }catch (Exception e){
-            response.put("error", "Fail while linking route");
-            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    @GetMapping("reports/{reportId}/route")
-    public ResponseEntity<Map<String, Object>> getRouteByReport(@PathVariable Long reportId){
-        Map<String, Object> response = new HashMap<>();
-        try{
-            Route route = expeditionService.getRouteByReport(reportId);
-            response.put("message", "Route got successfully");
-            response.put("route", route);
-            return new ResponseEntity<>(response, HttpStatus.OK);
-        }catch (IllegalArgumentException e){
-            response.put("error", e.getMessage());
-            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-        }catch (Exception e){
-            response.put("error", "Fail while getting route");
-            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    @PostMapping("/{expeditionId}/check-permits")
-    public ResponseEntity<Map<String, Object>> checkNecessaryPermits(
-            @PathVariable Long expeditionId,
-            @RequestBody List<String> requiredPermit
-    ){
-        Map<String, Object> response = new HashMap<>();
-        try{
-            boolean hasPermits = expeditionService.hasAllNecessaryPermits(expeditionId, requiredPermit);
-            if(!hasPermits){
-                response.put("message", "Haven't some necessary permits");
-            }else{
-                response.put("message", "All necessary permits issued");
-            }
-            return new ResponseEntity<>(response, HttpStatus.OK);
-        }catch (Exception e){
-            response.put("error", "Error while check permits");
-            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    @PostMapping("/{expeditionId}/permits")
-    public ResponseEntity<Map<String, Object>> createPermit(@PathVariable Long expeditionId, @RequestBody Permit permit){
-        Map<String, Object> response = new HashMap<>();
-        try{
-            Permit newPermit = expeditionService.createPermit(expeditionId, permit);
-            response.put("permit", newPermit);
-            return new ResponseEntity<>(response, HttpStatus.OK);
-        }catch (Exception e){
-            response.put("error", "Fail while creating permit");
-            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    @GetMapping("/{expeditionId}/permits")
-    public ResponseEntity<Map<String, Object>> getPermitsByExpedition(@PathVariable Long expeditionId){
-        Map<String, Object> response = new HashMap<>();
-        try{
-            List<Permit> permits = expeditionService.getPermitsByExpeditionId(expeditionId);
-            response.put("permit", permits);
-            return new ResponseEntity<>(response, HttpStatus.OK);
-        }catch (Exception e){
-            response.put("error", "Fail while getting permits");
-            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    @DeleteMapping("/permits/{permitId}")
-    public ResponseEntity<Map<String, Object>> deletePermit(@PathVariable Long permitId){
-        Map<String, Object> response = new HashMap<>();
-        try{
-            if(expeditionService.deletePermit(permitId)){
-                response.put("message", "Permit deleted successfully");
-                return new ResponseEntity<>(response, HttpStatus.OK);
-            }else{
-                response.put("error", "Permit not found");
-                return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
-            }
-        }catch (Exception e){
-            response.put("error", "Fail while deleting permit");
-            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    @PostMapping("/{expeditionId}/issue-missing-permits")
-    public ResponseEntity<Map<String, Object>> issueMissingPermits(
-            @PathVariable Long expeditionId,
-            @RequestBody Map<String, List<String>> request
-    ) {
-        Map<String, Object> response = new HashMap<>();
-        try {
-            List<String> requiredPermits = request.get("requiredPermitTypes");
-            expeditionService.issueMissingPermits(expeditionId, requiredPermits);
-            response.put("message", "Missing permits issued");
-            return new ResponseEntity<>(response, HttpStatus.OK);
-        } catch (Exception e) {
-            response.put("error", "Error while issuing missing permits");
-            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    // не уверен насколько метод поможет в взаимодействии с интерактивной картой, это скорее дело фронта
-    @GetMapping("/{expeditionId}/route-with-locations")
-    public ResponseEntity<Map<String, Object>> getRouteWithLocations(@PathVariable Long expeditionId){
-        Map<String, Object> response = new HashMap<>();
-        try{
-            Route route = expeditionService.getRouteWithLocations(expeditionId);
-            response.put("route", route);
-            return new ResponseEntity<>(response, HttpStatus.OK);
-
-        } catch(Exception e){
+        } else {
             response.put("error", "Route not found");
             return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
         }
     }
 
-    @PostMapping("/{id}/add-role")
-    public ResponseEntity<Map<String, Object>> addRequiredRole(@PathVariable Long id, @RequestBody String roleName){
+    @GetMapping("/{id}/rental-cost")
+    public ResponseEntity<Map<String, Object>> getRentalCost(@PathVariable Long id) {
         Map<String, Object> response = new HashMap<>();
-        if(expeditionService.addRequiredRole(id, roleName)){
+        Double rentalCost = expeditionService.calculateRentalCost(id);
+        response.put("rentalCost", rentalCost);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @GetMapping("/locations/{id}/hazards")
+    public ResponseEntity<Map<String, Object>> getAllHazards(@PathVariable Long id) {
+        Map<String, Object> response = new HashMap<>();
+        List<Hazard> hazards = expeditionService.getAllHazards(id);
+        response.put("hazards", hazards);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @PostMapping("/locations/{id}/hazards")
+    public ResponseEntity<Map<String, Object>> saveHazard(@PathVariable Long id, @RequestBody Hazard hazard) {
+        Map<String, Object> response = new HashMap<>();
+        Hazard createdHazard = expeditionService.saveHazard(id, hazard);
+        response.put("hazard", createdHazard);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @DeleteMapping("/locations/{locationId}/hazards/{hazardId}")
+    public ResponseEntity<Map<String, Object>> deleteHazard(@PathVariable Long locationId, @PathVariable Long hazardId) {
+        Map<String, Object> response = new HashMap<>();
+        boolean deletedHazard = expeditionService.deleteHazard(locationId, hazardId);
+        if (deletedHazard) {
+            response.put("message", "Hazard deleted successfully");
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } else {
+            response.put("error", "Hazard not found");
+            return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @PutMapping("/locations/{id}/hard-level")
+    public ResponseEntity<Map<String, Object>> addHardLevel(@PathVariable Long id, @RequestParam("hardLevel") Integer hardlevel) {
+        Map<String, Object> response = new HashMap<>();
+        Location locationWithHardLevel = expeditionService.addHardLevel(id, hardlevel);
+        response.put("location", locationWithHardLevel);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @PutMapping("/locations/{id}/overall-rating")
+    public ResponseEntity<Map<String, Object>> addOverallRating(@PathVariable Long id, @RequestParam("overallRating") Double overallRating) {
+        Map<String, Object> response = new HashMap<>();
+        Location locationWithOverallRating = expeditionService.addOverallRating(id, overallRating);
+        response.put("location", locationWithOverallRating);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @PutMapping("/reports/{reportId}/supplies/{supplyId}")
+    public ResponseEntity<Map<String, Object>> linkSupplyToReport(@PathVariable Long reportId, @PathVariable Long supplyId) {
+        Map<String, Object> response = new HashMap<>();
+
+        Report newReport = expeditionService.linkSupplyToReport(reportId, supplyId);
+        response.put("message", "Supply linked successfully");
+        response.put("supply", newReport);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @DeleteMapping("/reports/{reportId}/supplies/{supplyId}")
+    public ResponseEntity<Map<String, Object>> unlinkingSupplyFromReport(@PathVariable Long reportId, @PathVariable Long supplyId) {
+        Map<String, Object> response = new HashMap<>();
+        expeditionService.unlinkSupplyFromReport(reportId, supplyId);
+        response.put("message", "Supply unlinked successfully");
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @GetMapping("/reports/{reportId}/supplies")
+    public ResponseEntity<Map<String, Object>> getSuppliesReport(@PathVariable Long reportId) {
+        Map<String, Object> response = new HashMap<>();
+
+        List<Supplies> supplies = expeditionService.getSuppliesForReport(reportId);
+        response.put("message", "Supplies got successfully");
+        response.put("supplies", supplies);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @PutMapping("/reports/{reportId}/route/{routeId}")
+    public ResponseEntity<Map<String, Object>> linkReportToRoute(@PathVariable Long reportId, @PathVariable Long routeId) {
+        Map<String, Object> response = new HashMap<>();
+        Report newReport = expeditionService.linkReportToRoute(reportId, routeId);
+        response.put("message", "Route linked successfully");
+        response.put("report", newReport);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @GetMapping("reports/{reportId}/route")
+    public ResponseEntity<Map<String, Object>> getRouteByReport(@PathVariable Long reportId) {
+        Map<String, Object> response = new HashMap<>();
+
+        Route route = expeditionService.getRouteByReport(reportId);
+        response.put("message", "Route got successfully");
+        response.put("route", route);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @PostMapping("/{expeditionId}/check-permits")
+    public ResponseEntity<Map<String, Object>> checkNecessaryPermits(@PathVariable Long expeditionId, @RequestBody List<String> requiredPermit) {
+        Map<String, Object> response = new HashMap<>();
+        boolean hasPermits = expeditionService.hasAllNecessaryPermits(expeditionId, requiredPermit);
+        if (!hasPermits) {
+            response.put("message", "Haven't some necessary permits");
+        } else {
+            response.put("message", "All necessary permits issued");
+        }
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @PostMapping("/{expeditionId}/permits")
+    public ResponseEntity<Map<String, Object>> createPermit(@PathVariable Long expeditionId, @RequestBody Permit permit) {
+        Map<String, Object> response = new HashMap<>();
+        Permit newPermit = expeditionService.createPermit(expeditionId, permit);
+        response.put("permit", newPermit);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @GetMapping("/{expeditionId}/permits")
+    public ResponseEntity<Map<String, Object>> getPermitsByExpedition(@PathVariable Long expeditionId) {
+        Map<String, Object> response = new HashMap<>();
+        List<Permit> permits = expeditionService.getPermitsByExpeditionId(expeditionId);
+        response.put("permit", permits);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @DeleteMapping("/permits/{permitId}")
+    public ResponseEntity<Map<String, Object>> deletePermit(@PathVariable Long permitId) {
+        Map<String, Object> response = new HashMap<>();
+        if (expeditionService.deletePermit(permitId)) {
+            response.put("message", "Permit deleted successfully");
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } else {
+            response.put("error", "Permit not found");
+            return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @PostMapping("/{expeditionId}/issue-missing-permits")
+    public ResponseEntity<Map<String, Object>> issueMissingPermits(@PathVariable Long expeditionId, @RequestBody Map<String, List<String>> request) {
+        Map<String, Object> response = new HashMap<>();
+        List<String> requiredPermits = request.get("requiredPermitTypes");
+        expeditionService.issueMissingPermits(expeditionId, requiredPermits);
+        response.put("message", "Missing permits issued");
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    // не уверен насколько метод поможет в взаимодействии с интерактивной картой, это скорее дело фронта
+    @GetMapping("/{expeditionId}/route-with-locations")
+    public ResponseEntity<Map<String, Object>> getRouteWithLocations(@PathVariable Long expeditionId) {
+        Map<String, Object> response = new HashMap<>();
+        Route route = expeditionService.getRouteWithLocations(expeditionId);
+        response.put("route", route);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @PostMapping("/{id}/add-role")
+    public ResponseEntity<Map<String, Object>> addRequiredRole(@PathVariable Long id, @RequestBody String roleName) {
+        Map<String, Object> response = new HashMap<>();
+        if (expeditionService.addRequiredRole(id, roleName)) {
             response.put("message", "Role added successfully");
             return new ResponseEntity<>(response, HttpStatus.OK);
         }
-        response.put("error", "Fail while adding role");
-        return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to add required role");
     }
 
     @GetMapping("/{id}/check-roles")
-    public ResponseEntity<Map<String, Object>> checkAllNecessaryRoles(@PathVariable Long id){
+    public ResponseEntity<Map<String, Object>> checkAllNecessaryRoles(@PathVariable Long id) {
         Map<String, Object> response = new HashMap<>();
         boolean allRoles = expeditionService.checkAllNecessaryRoles(id);
         response.put("allRoles", allRoles);
@@ -515,16 +359,11 @@ public class ExpeditionController {
     }
 
     @GetMapping("/{id}/required-roles")
-    public ResponseEntity<Map<String, Object>> getRequiredRoles(@PathVariable Long id){
+    public ResponseEntity<Map<String, Object>> getRequiredRoles(@PathVariable Long id) {
         Map<String, Object> response = new HashMap<>();
-        try{
-            List<String> requiredRoles = expeditionService.getRequiredRolesForExpedition(id);
-            response.put("requiredRoles", requiredRoles);
-            return new ResponseEntity<>(response, HttpStatus.OK);
-        }catch (Exception e){
-            response.put("error", "Fail while getting roles");
-            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        List<String> requiredRoles = expeditionService.getRequiredRolesForExpedition(id);
+        response.put("requiredRoles", requiredRoles);
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @DeleteMapping("/{id}/remove-role")
@@ -539,42 +378,29 @@ public class ExpeditionController {
     }
 
     @GetMapping("/{id}/can-start")
-    public ResponseEntity<Map<String, Object>> canStartExpedition(@PathVariable Long id){
+    public ResponseEntity<Map<String, Object>> canStartExpedition(@PathVariable Long id) {
         Map<String, Object> response = new HashMap<>();
-        try{
-            boolean canStart = expeditionService.canStartExpedition(id);
-            response.put("canStart", canStart);
-            if(canStart){
-                response.put("message", "Expedition can be started");
-            }else{
-                response.put("message", "Expedition can't be started");
-            }
-            return new ResponseEntity<>(response, HttpStatus.OK);
-        }catch (Exception e){
-            response.put("error", e.getMessage());
-            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        boolean canStart = expeditionService.canStartExpedition(id);
+        response.put("canStart", canStart);
+        if (canStart) {
+            response.put("message", "Expedition can be started");
+        } else {
+            response.put("message", "Expedition can't be started");
         }
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @PostMapping("/{id}/update-status")
-    public ResponseEntity<Map<String, Object>> updateExpeditionStatus(
-            @PathVariable Long id,
-            @RequestBody String newStatus
-    ){
+    public ResponseEntity<Map<String, Object>> updateExpeditionStatus(@PathVariable Long id, @RequestBody String newStatus) {
         Map<String, Object> response = new HashMap<>();
-        try{
-            boolean changedStatus = expeditionService.updateExpeditionStatus(id, newStatus);
-            if(changedStatus){
-                response.put("message", "Expedition status updated successfully");
-                response.put("newStatus", newStatus);
-                return new ResponseEntity<>(response, HttpStatus.OK);
-            }else{
-                response.put("error", "Fail while updating status");
-                return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-            }
-        }catch (Exception e){
-            response.put("error", e.getMessage());
-            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        boolean changedStatus = expeditionService.updateExpeditionStatus(id, newStatus);
+        if (changedStatus) {
+            response.put("message", "Expedition status updated successfully");
+            response.put("newStatus", newStatus);
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } else {
+            response.put("error", "Fail while updating status");
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
         }
 
     }
