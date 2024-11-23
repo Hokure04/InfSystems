@@ -72,12 +72,24 @@ public class ExpeditionService {
         return false;
     }
 
-    public boolean assignAdmin(Long expeditionId, Long userId){
+    public boolean assignAdmin(Long expeditionId, Long userId, Long adminId){
         Optional<Expedition> expeditionOptional = expeditionRepository.findById(expeditionId);
-        Optional<User> userInfoOptional = userRepository.findById(userId);
+        Optional<User> userOptional = userRepository.findById(userId);
+        Optional<User> adminOptional = userRepository.findById(adminId);
 
-        if(expeditionOptional.isPresent() && userInfoOptional.isPresent()){
-            User user = userInfoOptional.get();
+        if(expeditionOptional.isPresent() && userOptional.isPresent() && adminOptional.isPresent()){
+            Expedition expedition = expeditionOptional.get();
+            User admin = adminOptional.get();
+            User user = userOptional.get();
+
+            if(!"Admin".equals(admin.getExpeditionRole()) || !expedition.getUserList().contains(admin)){
+                return false;
+            }
+
+            if(!expedition.getUserList().contains(user)){
+                return false;
+            }
+
             user.setExpeditionRole("Admin");
             userRepository.save(user);
             return true;
@@ -398,4 +410,21 @@ public class ExpeditionService {
         return false;
     }
 
+    public boolean canStartExpedition(Long id){
+        Expedition expedition = expeditionRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Expedition not found"));
+        return expedition.hasRequiredRolesAssigned();
+    }
+
+    public boolean updateExpeditionStatus(Long id, String newStatus){
+        Expedition expedition = expeditionRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Expedition not found"));
+
+        if("In Progress".equalsIgnoreCase(newStatus) && !expedition.hasRequiredRolesAssigned()){
+            throw new RuntimeException("Can't update status because not all roles assigned");
+        }
+        expedition.setStatus(newStatus);
+        expeditionRepository.save(expedition);
+        return true;
+    }
 }

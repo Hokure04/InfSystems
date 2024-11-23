@@ -26,13 +26,13 @@ import java.util.Map;
 ✔    3.1.9 Предоставлять возможность ставить общий рейтинг для локации - метод: addOverallRating в Expedition Service и Controller
 ✔    3.1.10 Предоставлять возможность проверки полноты соответствия имеющегося набора разрешений для экспедиции - метод: checkNecessaryPermits
     3.1.11 Предоставлять возможность автоматически проверять наличии у хотя бы одного члена экспедиции права на управление транспортом, участвующем в экспедиции
-    3.1.12 Предоставлять возможность запрещать проведение экспедиции при отсутствии полного набора необходимых ролей для проведения экспедиции
+✔    3.1.12 Предоставлять возможность запрещать проведение экспедиции при отсутствии полного набора необходимых ролей для проведения экспедиции методы: updateExpeditionStatus, canStartExpedition
 ✔    3.1.13 Предоставлять возможность в отчете ссылаться на список запасов, которые использовались в экспедиции - методы: linkSupplyToReport, unlinkingSupplyFromReport, getSuppliesReport
 ✔    3.1.14 Предоставлять возможность в отчете  ссылаться на маршрут экспедиции - методы: linkReportToRoute, getRouteByReport
 
 Требования администратора группы:
 ✔    3.1.15 Предоставлять возможность указать необходимые роли для проведения экспедиции: метод: addRequiredRole, getRequiredRoles, removeRequiredRole
-    3.1.16 Предоставлять возможность назначить участника команды администратором группы
+✔    3.1.16 Предоставлять возможность назначить участника команды администратором группы: метод: assignAdmin
 ✔    3.1.17 Предоставлять возможность принимать заявки пользователей к участию в экспедиции - методы: addUser, applyUser, rejectUser
 ✔    3.1.18 Предоставлять возможность составления маршрута проведения экспедиции - методы: crateRoute
 ✔    3.1.19 Предоставлять возможность указать опасные участки маршрута, с указанием информации в чём заключается опасности - метод: saveHazard в Expedition Service и Controller
@@ -45,7 +45,7 @@ import java.util.Map;
 ✔    3.1.24 Предоставлять возможность редактировать/удалять несоответствующих действительности постов
 ✔    3.1.25 Предоставлять возможность загружать/редактировать/удалять сертификаты на оборудование - методы: saveCertificate, updateCertificate, deleteCertificate в Equipment Service и Controller
 ✔    3.1.26 Предоставлять возможность загружать/редактировать/удалять информацию об оборудовании и транспорте - методы: createVehicle, createEquipment, deleteVehicle, deleteEquipment, updateEquipment, updateVehicle
- */
+*/
 
 
 @CrossOrigin(origins = "http://localhost:5173")
@@ -111,10 +111,15 @@ public class ExpeditionController {
         return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-    @PostMapping("/{expeditionId}/assign-admin/{userId}")
-    public ResponseEntity<Map<String, Object>> assignAdmin(@PathVariable Long expeditionId, @PathVariable Long userId){
+    @PostMapping("/{expeditionId}/assign-admin")
+    public ResponseEntity<Map<String, Object>> assignAdmin(
+            @PathVariable Long expeditionId,
+            @RequestParam Long userId,
+            @RequestParam Long adminId
+    ){
         Map<String, Object> response = new HashMap<>();
-        if (expeditionService.assignAdmin(expeditionId, userId)) {
+        if (expeditionService.assignAdmin(expeditionId, userId, adminId)) {
+            response.put("message", "User successfully assigned as admin");
             response.put("expedition", expeditionService.findById(expeditionId));
             response.put("user", userRepository.findById(userId));
             return new ResponseEntity<>(response, HttpStatus.OK);
@@ -531,6 +536,47 @@ public class ExpeditionController {
         }
         response.put("error", "Fail while removing role");
         return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @GetMapping("/{id}/can-start")
+    public ResponseEntity<Map<String, Object>> canStartExpedition(@PathVariable Long id){
+        Map<String, Object> response = new HashMap<>();
+        try{
+            boolean canStart = expeditionService.canStartExpedition(id);
+            response.put("canStart", canStart);
+            if(canStart){
+                response.put("message", "Expedition can be started");
+            }else{
+                response.put("message", "Expedition can't be started");
+            }
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        }catch (Exception e){
+            response.put("error", e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @PostMapping("/{id}/update-status")
+    public ResponseEntity<Map<String, Object>> updateExpeditionStatus(
+            @PathVariable Long id,
+            @RequestBody String newStatus
+    ){
+        Map<String, Object> response = new HashMap<>();
+        try{
+            boolean changedStatus = expeditionService.updateExpeditionStatus(id, newStatus);
+            if(changedStatus){
+                response.put("message", "Expedition status updated successfully");
+                response.put("newStatus", newStatus);
+                return new ResponseEntity<>(response, HttpStatus.OK);
+            }else{
+                response.put("error", "Fail while updating status");
+                return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+            }
+        }catch (Exception e){
+            response.put("error", e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
     }
 
 }
