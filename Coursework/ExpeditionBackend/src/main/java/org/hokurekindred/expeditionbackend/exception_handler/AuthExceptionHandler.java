@@ -4,9 +4,6 @@ import io.jsonwebtoken.JwtException;
 import jakarta.mail.MessagingException;
 import jakarta.mail.SendFailedException;
 import org.eclipse.angus.mail.smtp.SMTPAddressFailedException;
-import org.hokurekindred.expeditionbackend.exceptions.UserAlreadyExistException;
-import org.hokurekindred.expeditionbackend.exceptions.UserAlreadyHasRoleException;
-import org.hokurekindred.expeditionbackend.exceptions.UserNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mail.MailSendException;
@@ -64,28 +61,12 @@ public class AuthExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-    @ExceptionHandler(UserNotFoundException.class)
-    public ResponseEntity<Map<String, String>> handleUserNotFoundException(UserNotFoundException ex) {
-        Map<String, String> errorResponse = new HashMap<>();
-        errorResponse.put("error", "User not found");
-        errorResponse.put("message", ex.getMessage());
-        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
-    }
-
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<Map<String, String>> handleBadCredentialsException(BadCredentialsException ex) {
         Map<String, String> errorResponse = new HashMap<>();
         errorResponse.put("error", "Invalid login or password");
         errorResponse.put("message", ex.getMessage());
         return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
-    }
-
-    @ExceptionHandler(UserAlreadyExistException.class)
-    public ResponseEntity<Map<String, String>> handleUserAlreadyExistException(UserAlreadyExistException ex) {
-        Map<String, String> errorResponse = new HashMap<>();
-        errorResponse.put("error", "User with this credentials already exist");
-        errorResponse.put("message", ex.getMessage());
-        return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
     }
 
     @ExceptionHandler(JwtException.class)
@@ -96,11 +77,4 @@ public class AuthExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
     }
 
-    @ExceptionHandler(UserAlreadyHasRoleException.class)
-    public ResponseEntity<Map<String, String>> handleUserAlreadyHasRoleException(UserAlreadyHasRoleException ex) {
-        Map<String, String> errorResponse = new HashMap<>();
-        errorResponse.put("error", "User is already admin");
-        errorResponse.put("message", ex.getMessage());
-        return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
-    }
 }

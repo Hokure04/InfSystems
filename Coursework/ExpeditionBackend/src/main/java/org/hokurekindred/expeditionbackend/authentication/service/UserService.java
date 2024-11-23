@@ -1,17 +1,14 @@
 package org.hokurekindred.expeditionbackend.authentication.service;
 
-import jakarta.validation.ConstraintViolationException;
 import org.hokurekindred.expeditionbackend.dto.LoginRequest;
-import org.hokurekindred.expeditionbackend.exceptions.UserAlreadyExistException;
-import org.hokurekindred.expeditionbackend.exceptions.UserNotFoundException;
 import org.hokurekindred.expeditionbackend.model.User;
 import org.hokurekindred.expeditionbackend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.TransactionSystemException;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Optional;
 
@@ -25,17 +22,7 @@ public class UserService {
     private PasswordEncoder passwordEncoder;
 
     public void save(User user) {
-        try {
-            userRepository.save(user);
-        } catch (DataIntegrityViolationException ex) {
-            throw new UserAlreadyExistException("User with the same credentials already exists", ex);
-        } catch (TransactionSystemException ex) {
-            Throwable rootCause = ex.getRootCause();
-            if (rootCause instanceof ConstraintViolationException) {
-                throw new UserAlreadyExistException("Validation constraints violated: " + rootCause.getMessage(), ex);
-            }
-            throw ex;
-        }
+        userRepository.save(user);
     }
 
     public void encodePasswordAndSaveUser(User user) {
@@ -54,22 +41,22 @@ public class UserService {
         return user;
     }
 
-    public User updateSkills(Long userId, String skills){
-        if(skills == null || skills.isBlank()){
+    public User updateSkills(Long userId, String skills) {
+        if (skills == null || skills.isBlank()) {
             throw new IllegalArgumentException("Skill can't be empty");
         }
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("User with ID" + userId + " not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User with ID" + userId + " not found"));
         user.setSkill(skills);
         return userRepository.save(user);
     }
 
-    public User updateUserInfo(Long userId, String aboutUser){
-        if(aboutUser == null || aboutUser.isBlank()){
+    public User updateUserInfo(Long userId, String aboutUser) {
+        if (aboutUser == null || aboutUser.isBlank()) {
             throw new IllegalArgumentException("Information can't be empty");
         }
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("User with ID" + userId + "not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User with ID" + userId + "not found"));
         user.setAboutUser(aboutUser);
         return userRepository.save(user);
     }

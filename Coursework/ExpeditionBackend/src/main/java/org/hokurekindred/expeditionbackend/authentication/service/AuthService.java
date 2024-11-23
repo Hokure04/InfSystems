@@ -4,18 +4,15 @@ import jakarta.mail.MessagingException;
 import org.hokurekindred.expeditionbackend.authentication.JwtTokenProvider;
 import org.hokurekindred.expeditionbackend.authentication.Roles;
 import org.hokurekindred.expeditionbackend.dto.LoginRequest;
-import org.hokurekindred.expeditionbackend.exceptions.UserAlreadyActivateException;
-import org.hokurekindred.expeditionbackend.exceptions.UserAlreadyHasRoleException;
-import org.hokurekindred.expeditionbackend.exceptions.UserNotFoundException;
 import org.hokurekindred.expeditionbackend.mapper.UserMapper;
 import org.hokurekindred.expeditionbackend.model.User;
-import org.hokurekindred.expeditionbackend.repository.RoleRepository;
 import org.hokurekindred.expeditionbackend.repository.UserRepository;
 import org.hokurekindred.expeditionbackend.service.RoleService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -30,8 +27,6 @@ public class AuthService {
     private UserService userService;
     @Autowired
     private EmailService emailService;
-    @Autowired
-    private RoleRepository roleRepository;
     @Autowired
     private UserRepository userRepository;
     @Autowired
@@ -51,7 +46,7 @@ public class AuthService {
     }
 
     public ResponseEntity<Map<String, String>> sendActivation(String email) throws MessagingException {
-        userRepository.findByEmail(email).orElseThrow(() -> new UserNotFoundException(email));
+        userRepository.findByEmail(email).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User with email: " + email + " not found"));
         String activationToken = jwtTokenProvider.generateActivateToken(email);
         Map<String, String> response = new HashMap<>();
         emailService.sendActivationEmail(email, ACTIVATION_LINK + activationToken);
@@ -62,10 +57,10 @@ public class AuthService {
     public ResponseEntity<Map<String, String>> activateAccount(String token) {
         Map<String, String> response = new HashMap<>();
         jwtTokenProvider.validateActivationToken(token);
-        User user = userRepository.findByEmail(jwtTokenProvider.getEmailFromActivationToken(token)).orElseThrow(() -> new UserNotFoundException("User not found"));
+        User user = userRepository.findByEmail(jwtTokenProvider.getEmailFromActivationToken(token)).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 
         if (user.getRole().contains(roleService.ensureRoleExists(Roles.USER))) {
-            throw new UserAlreadyActivateException();
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "User is already activated");
         }
         user.addRoles(roleService.ensureRoleExists(Roles.USER));
         userService.save(user);
@@ -75,9 +70,9 @@ public class AuthService {
 
     public ResponseEntity<Map<String, String>> addAdministratorRole(String username) {
         Map<String, String> response = new HashMap<>();
-        User user = userRepository.findByUsername(username).orElseThrow(() -> new UserNotFoundException(username));
+        User user = userRepository.findByUsername(username).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User with username: " + username + " not found"));
         if (user.getRole().contains(roleService.ensureRoleExists(Roles.ADMIN))) {
-            throw new UserAlreadyHasRoleException(username);
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "User with username " + username + " is already admin");
         }
 
         user.addRoles(roleService.ensureRoleExists(Roles.ADMIN));
@@ -88,7 +83,7 @@ public class AuthService {
 
     public ResponseEntity<Map<String, String>> removeAdministratorRole(String username) {
         Map<String, String> response = new HashMap<>();
-        User user = userRepository.findByUsername(username).orElseThrow(() -> new UserNotFoundException(username));
+        User user = userRepository.findByUsername(username).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User with username: " + username + " not found"));
         user.removeRoles(roleService.ensureRoleExists(Roles.ADMIN));
         userService.save(user);
         response.put("message", String.format("User %s is not now ADMIN", username));
@@ -97,8 +92,8 @@ public class AuthService {
 
     public ResponseEntity<Map<String, String>> deleteUser(String username) {
         Map<String, String> response = new HashMap<>();
-        User user = userRepository.findByUsername(username).orElseThrow(() -> new UserNotFoundException(username));
-        if (user.getRole().contains(roleRepository.findByName(Roles.ADMIN))) {
+        User user = userRepository.findByUsername(username).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User with username: " + username + " not found"));
+        if (user.getRole().contains(roleService.ensureRoleExists(Roles.ADMIN))) {
             response.put("error", "U can not delete administrator");
             return new ResponseEntity<>(response, HttpStatus.CONFLICT);
         }
