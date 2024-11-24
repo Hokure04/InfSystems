@@ -49,7 +49,7 @@ public class Expedition {
     private String status;
 
     @ManyToOne
-    @JoinColumn(name = "route_id", nullable = true)
+    @JoinColumn(name = "route_id")
     private Route route;
 
     @OneToMany(mappedBy = "expedition", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -95,14 +95,5 @@ public class Expedition {
         }
         return true;
     }
-
-    /*public boolean hasAllRoles(){
-        for(User user : userList){
-            if(!user.getExpeditionRole().equals("Адмимнистратор")){
-                return false;
-            }
-        }
-        return true;
-    }*/
 
 }
