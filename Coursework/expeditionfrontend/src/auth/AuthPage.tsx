@@ -13,7 +13,7 @@ const AuthPage: React.FC = () => {
     return (
         <Box
             sx={{
-                mt: 20,
+                mt: 5,
                 width: '100%',
                 display: 'flex',
                 flexDirection: 'column',
@@ -46,7 +46,7 @@ const AuthPage: React.FC = () => {
                 ) : (
                     <>
                         <RegistrationForm />
-                        <Typography variant="body2" align="center" sx={{ mt: 2 }}>
+                        <Typography variant="body2" align="center">
                             Уже есть аккаунт?{' '}
                             <Button variant="text" onClick={handleToggle}>
                                 Войти

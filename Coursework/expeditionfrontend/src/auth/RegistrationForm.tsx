@@ -186,7 +186,7 @@ const RegistrationForm: React.FC = () => {
                 maxWidth: 500,
                 mx: 'auto',
 
-                p: 3,
+                p: 2,
                 textAlign: 'center',
             }}
         >
