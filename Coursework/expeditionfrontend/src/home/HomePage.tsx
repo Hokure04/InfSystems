@@ -25,7 +25,7 @@ const HomePage: React.FC = () => {
             setUser(JSON.parse(userData));
         } else {
             // Если пользователь не авторизован, перенаправляем на страницу входа
-            navigate('/login');
+            navigate('/auth');
         }
     }, [navigate]);
 
@@ -33,7 +33,7 @@ const HomePage: React.FC = () => {
         // Удаляем данные из localStorage при выходе
         localStorage.removeItem('token');
         localStorage.removeItem('user');
-        navigate('/login');
+        navigate('/auth');
     };
 
     return (
