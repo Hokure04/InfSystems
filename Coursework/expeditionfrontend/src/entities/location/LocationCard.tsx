@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card, CardContent, Typography, Grid, Box } from '@mui/material';
-import HazardCard from '../hazard/HazardCard'; // Импорт HazardCard
+import HazardCard from '../hazard/HazardCard.tsx'; // Импорт HazardCard
 import {Location} from './Location.ts';
 
 interface LocationCardProps {

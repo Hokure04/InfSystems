@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Box, Typography, Button } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import {Equipment} from "../equipment/Equipment.ts";
-import EquipmentCard from "../equipment/EquipmentCard.tsx";
+import {Equipment} from "../entities/equipment/Equipment.ts";
+import EquipmentCard from "../entities/equipment/EquipmentCard.tsx";
 
 interface User {
     id: number;

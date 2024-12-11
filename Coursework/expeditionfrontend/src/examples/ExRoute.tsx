@@ -1,7 +1,7 @@
 import React from 'react';
 import { Grid, Container } from '@mui/material';
-import RouteCard from '../route/RouteCard';
-import {Route} from "../route/Route.ts";
+import RouteCard from '../entities/route/RouteCard';
+import {Route} from "../entities/route/Route.ts";
 
 // Примерные данные маршрутов
 const exampleRoutes: Route[] = [

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card, CardContent, Typography, Grid, Box } from '@mui/material';
-import LocationCard from '../location/LocationCard';
+import LocationCard from '../location/LocationCard.tsx';
 import {Route} from "./Route.ts"; // Импорт LocationCard
 
 interface RouteCardProps {

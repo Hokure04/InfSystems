@@ -1,6 +1,6 @@
 import React from 'react';
 import {Card, CardContent, Typography, Divider, Box} from '@mui/material';
-import CertificateCard from '../certificate/CertificateCard';
+import CertificateCard from '../certificate/CertificateCard.tsx';
 import {Equipment} from './Equipment.ts';
 
 interface EquipmentProps {
