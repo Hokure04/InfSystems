@@ -5,11 +5,13 @@ import AuthPage from "./auth/AuthPage.tsx";
 import {createTheme, ThemeProvider} from "@mui/material";
 import Layout from "./Layout.tsx";
 import ActivationPage from "./auth/ActivationPage.tsx";
+import ExRoute from "./examples/ExRoute.tsx";
 
 
 const theme = createTheme({
     palette: {
         mode: 'dark',
+
     },
 });
 
@@ -25,6 +27,12 @@ const App: React.FC = () => {
                         <Route path="/home" element={<HomePage/>}/>
                         <Route path="/activate" element={<ActivationPage/>}/>
                         <Route path="/auth" element={<AuthPage/>}/>
+
+
+
+                        {/* examples */}
+                        <Route path="/route" element={<ExRoute/>}/>
+
 
 
 
