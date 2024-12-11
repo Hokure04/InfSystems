@@ -1,17 +1,61 @@
 import React, { useState } from 'react';
-import RegistrationForm from './RegistrationForm';
-import LoginForm from './LoginForm';
+import { Box, Button, Typography } from '@mui/material';
+import LoginForm from '../auth/LoginForm';
+import RegistrationForm from '../auth/RegistrationForm';
 
 const AuthPage: React.FC = () => {
-    const [isLoginMode, setIsLoginMode] = useState(true);
+    const [showLogin, setShowLogin] = useState(true);
+
+    const handleToggle = () => {
+        setShowLogin(!showLogin);
+    };
 
     return (
-        <div>
-            <button onClick={() => setIsLoginMode(!isLoginMode)}>
-                {isLoginMode ? 'Перейти к регистрации' : 'Перейти к авторизации'}
-            </button>
-            {isLoginMode ? <LoginForm /> : <RegistrationForm />}
-        </div>
+        <Box
+            sx={{
+                mt: 20,
+                width: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                alignItems: 'center',
+                overflow: 'auto',
+                p: 2,
+                boxSizing: 'border-box',
+            }}
+        >
+            <Box
+                sx={{
+                    width: '100%',
+                    maxWidth: 500,
+                    p: 3,
+                    borderRadius: 2,
+                    boxShadow: 3,
+                }}
+            >
+                {showLogin ? (
+                    <>
+                        <LoginForm />
+                        <Typography variant="body2" align="center" sx={{ mt: 2 }}>
+                            Нет аккаунта?{' '}
+                            <Button variant="text" onClick={handleToggle}>
+                                Зарегистрироваться
+                            </Button>
+                        </Typography>
+                    </>
+                ) : (
+                    <>
+                        <RegistrationForm />
+                        <Typography variant="body2" align="center" sx={{ mt: 2 }}>
+                            Уже есть аккаунт?{' '}
+                            <Button variant="text" onClick={handleToggle}>
+                                Войти
+                            </Button>
+                        </Typography>
+                    </>
+                )}
+            </Box>
+        </Box>
     );
 };
 

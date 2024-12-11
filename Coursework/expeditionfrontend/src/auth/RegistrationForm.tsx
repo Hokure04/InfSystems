@@ -1,4 +1,6 @@
-import React, { useState } from "react";
+import React, {useState} from "react";
+import InputMask from 'react-input-mask';
+
 import {
     TextField,
     Button,
@@ -8,10 +10,77 @@ import {
     IconButton,
     InputAdornment, CircularProgress, Alert,
 } from "@mui/material";
-import { Visibility, VisibilityOff } from "@mui/icons-material";
+import {Visibility, VisibilityOff} from "@mui/icons-material";
 import api from "../api.ts";
+import {HttpStatusCode} from "axios";
+import {useNavigate} from "react-router-dom";
+
+
+// const [formData, setFormData] = useState({
+//     username: "",
+//     email: "",
+//     password: "",
+//     confirmPassword: "",
+//     name: "",
+//     surname: "",
+//     phoneNumber: "",
+//     vehicleType: "",
+//     expeditionRole: "",
+//     skill: "",
+//     aboutUser: "",
+// });
+//
+// const [formErrors, setFormErrors] = useState({
+//     username: "",
+//     email: "",
+//     password: "",
+//     confirmPassword: "",
+//     name: "",
+//     surname: "",
+//     phoneNumber: "",
+// });
+//
+// const [showPassword, setShowPassword] = useState(false);
+// const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+//
+// const validate = () => {
+//     const errors: any = {};
+//
+//     if (!formData.username.trim()) {
+//         errors.username = "Имя пользователя не может быть пустым";
+//     }
+//     if (formData.username.includes("@")) {
+//         errors.username = "Имя пользователя не должно содержать символ \"@\"";
+//     }
+//     if (!formData.email.trim() || !/\S+@\S+\.\S+/.test(formData.email)) {
+//         errors.email = "Введите корректный email";
+//     }
+//     if (formData.password.length < 8) {
+//         errors.password = "Пароль должен содержать не менее 8 символов";
+//     }
+//     if (formData.password !== formData.confirmPassword) {
+//         errors.confirmPassword = "Пароли не совпадают";
+//     }
+//     if (!formData.name.trim()) {
+//         errors.name = "Имя не может быть пустым";
+//     }
+//     if (!formData.surname.trim()) {
+//         errors.surname = "Фамилия не может быть пустой";
+//     }
+//     if (
+//         formData.phoneNumber &&
+//         !/^\+?[0-9]{10,15}$/.test(formData.phoneNumber)
+//     ) {
+//         errors.phoneNumber = "Введите корректный номер телефона";
+//     }
+//
+//     setFormErrors(errors);
+//     return Object.keys(errors).length === 0;
+// };
+
 
 const RegistrationForm: React.FC = () => {
+    useNavigate();
     const [formData, setFormData] = useState({
         username: "",
         email: "",
@@ -25,71 +94,82 @@ const RegistrationForm: React.FC = () => {
         skill: "",
         aboutUser: "",
     });
-
-    const [formErrors, setFormErrors] = useState({
-        username: "",
-        email: "",
-        password: "",
-        confirmPassword: "",
-        name: "",
-        surname: "",
-        phoneNumber: "",
-    });
-
-    const [showPassword, setShowPassword] = useState(false);
-    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
-    const validate = () => {
-        const errors: any = {};
-
-        if (!formData.username.trim()) {
-            errors.username = "Username не может быть пустым";
-        }
-        if (!formData.email.trim() || !/\S+@\S+\.\S+/.test(formData.email)) {
-            errors.email = "Введите корректный email";
-        }
-        if (formData.password.length < 8) {
-            errors.password = "Пароль должен содержать не менее 8 символов";
-        }
-        if (formData.password !== formData.confirmPassword) {
-            errors.confirmPassword = "Пароли не совпадают";
-        }
-        if (!formData.name.trim()) {
-            errors.name = "Имя не может быть пустым";
-        }
-        if (!formData.surname.trim()) {
-            errors.surname = "Фамилия не может быть пустой";
-        }
-        if (
-            formData.phoneNumber &&
-            !/^\+?[0-9]{10,15}$/.test(formData.phoneNumber)
-        ) {
-            errors.phoneNumber = "Введите корректный номер телефона";
-        }
-
-        setFormErrors(errors);
-        return Object.keys(errors).length === 0;
-    };
+    const [passwordVisible, setPasswordVisible] = useState(false);
+    const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
     const [loading, setLoading] = useState(false);
     const [successMessage, setSuccessMessage] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
+    const [passwordError, setPasswordError] = useState('');
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const {name, value} = e.target;
+        setFormData((prev) => ({...prev, [name]: value}));
+
+        if (name === 'confirmPassword' || name === 'password') {
+            setPasswordError(
+                name === 'confirmPassword' && value !== formData.password
+                    ? 'Пароли не совпадают'
+                    : ''
+            );
+        }
+        if (name === 'password') {
+            if (formData.password.length < 8) {
+                setPasswordError('Пароль должен быть не менее 8 символов');
+                return;
+            }
+        }
+        // if (name === 'email')
+        // {
+        //     if (!formData.email.trim() || !/\S+@\S+\.\S+/.test(formData.email)) {
+        //         setErrorMessage("Введите корректный email");
+        //         return;
+        //     }
+        // }
 
 
-    const handleSubmit = async (event: React.FormEvent) => {
-        event.preventDefault();
+    };
 
-        if (!validate()) return;
+    const handlePasswordVisibilityToggle = () => {
+        setPasswordVisible(!passwordVisible);
+    };
+
+    const handleConfirmPasswordVisibilityToggle = () => {
+        setConfirmPasswordVisible(!confirmPasswordVisible);
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (formData.username.includes('@')) {
+            setErrorMessage('Имя пользователя не должно содержать символ "@".');
+            return;
+        }
+        if (formData.password.length < 8) {
+            setPasswordError('Пароль должен быть не менее 8 символов');
+            return;
+        }
+        if (formData.password !== formData.confirmPassword) {
+            setPasswordError('Пароли не совпадают');
+            return;
+        }
+        const sanitizedFormData = Object.fromEntries(
+            Object.entries(formData).map(([key, value]) => [key, value.trim() === '' ? null : value])
+        );
         setLoading(true);
         setErrorMessage('');
         try {
-            await api.post("/register", formData);
+            await api.post('/register', sanitizedFormData);
             setSuccessMessage(
                 `Регистрация успешна! Мы отправили письмо для активации на адрес ${formData.email}.`
             );
         } catch (error: any) {
-            setErrorMessage(
-                error.response?.data?.error || 'Произошла ошибка при регистрации.'
-            );
+            if (error.response?.status === HttpStatusCode.Conflict) {
+                setErrorMessage(error.response?.data?.error);
+            } else {
+                setErrorMessage(
+                    error.response?.data?.message || 'Произошла ошибка при регистрации.'
+                );
+            }
+
         } finally {
             setLoading(false);
         }
@@ -100,75 +180,61 @@ const RegistrationForm: React.FC = () => {
         window.open(`https://${emailDomain}`, '_blank');
     };
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setFormData({
-            ...formData,
-            [e.target.name]: e.target.value,
-        });
-
-        setFormErrors({
-            ...formErrors,
-            [e.target.name]: "",
-        });
-    };
-
     return (
         <Box
             sx={{
-                maxWidth: 600,
-                mx: "auto",
-                mt: 5,
+                maxWidth: 500,
+                mx: 'auto',
+
                 p: 3,
-                boxShadow: 3,
-                borderRadius: 2,
+                textAlign: 'center',
             }}
         >
-            <Typography variant="h5" mb={3} textAlign="center">
+            <Typography variant="h4" align="center" gutterBottom>
                 Регистрация
             </Typography>
             <form onSubmit={handleSubmit}>
                 <Grid container spacing={2}>
                     <Grid item xs={12}>
                         <TextField
-                            fullWidth
-                            label="Username"
+                            label="Имя пользователя"
                             name="username"
                             value={formData.username}
                             onChange={handleChange}
-                            error={!!formErrors.username}
-                            helperText={formErrors.username}
+                            fullWidth
+                            required
+                            autoComplete="off"
                         />
                     </Grid>
                     <Grid item xs={12}>
                         <TextField
-                            fullWidth
                             label="Email"
                             name="email"
-                            type="email"
                             value={formData.email}
                             onChange={handleChange}
-                            error={!!formErrors.email}
-                            helperText={formErrors.email}
+                            fullWidth
+                            required
+                            type="email"
                         />
                     </Grid>
                     <Grid item xs={12}>
                         <TextField
-                            fullWidth
                             label="Пароль"
                             name="password"
-                            type={showPassword ? "text" : "password"}
                             value={formData.password}
                             onChange={handleChange}
-                            error={!!formErrors.password}
-                            helperText={formErrors.password}
+                            fullWidth
+                            required
+                            type={passwordVisible ? 'text' : 'password'}
+                            autoComplete="new-password"
                             InputProps={{
                                 endAdornment: (
                                     <InputAdornment position="end">
                                         <IconButton
-                                            onClick={() => setShowPassword(!showPassword)}
+                                            onClick={handlePasswordVisibilityToggle}
                                             edge="end"
                                         >
-                                            {showPassword ? <VisibilityOff /> : <Visibility />}
+                                            {passwordVisible ? <VisibilityOff/> : <Visibility/>}
                                         </IconButton>
                                     </InputAdornment>
                                 ),
@@ -177,62 +243,72 @@ const RegistrationForm: React.FC = () => {
                     </Grid>
                     <Grid item xs={12}>
                         <TextField
-                            fullWidth
-                            label="Подтвердите пароль"
+                            label="Подтверждение пароля"
                             name="confirmPassword"
-                            type={showConfirmPassword ? "text" : "password"}
                             value={formData.confirmPassword}
                             onChange={handleChange}
-                            error={!!formErrors.confirmPassword}
-                            helperText={formErrors.confirmPassword}
+                            fullWidth
+                            required
+                            type={confirmPasswordVisible ? 'text' : 'password'}
+                            error={!!passwordError}
+                            helperText={passwordError}
+                            autoComplete="new-password"
+                            onPaste={(e) => e.preventDefault()}
                             InputProps={{
                                 endAdornment: (
                                     <InputAdornment position="end">
                                         <IconButton
-                                            onClick={() =>
-                                                setShowConfirmPassword(!showConfirmPassword)
-                                            }
+                                            onClick={handleConfirmPasswordVisibilityToggle}
                                             edge="end"
                                         >
-                                            {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+                                            {confirmPasswordVisible ? (
+                                                <VisibilityOff/>
+                                            ) : (
+                                                <Visibility/>
+                                            )}
                                         </IconButton>
                                     </InputAdornment>
                                 ),
                             }}
                         />
                     </Grid>
-                    <Grid item xs={12}>
+                    <Grid item xs={6}>
                         <TextField
-                            fullWidth
                             label="Имя"
                             name="name"
                             value={formData.name}
                             onChange={handleChange}
-                            error={!!formErrors.name}
-                            helperText={formErrors.name}
+                            fullWidth
+                            required
                         />
                     </Grid>
-                    <Grid item xs={12}>
+                    <Grid item xs={6}>
                         <TextField
-                            fullWidth
                             label="Фамилия"
                             name="surname"
                             value={formData.surname}
                             onChange={handleChange}
-                            error={!!formErrors.surname}
-                            helperText={formErrors.surname}
+                            fullWidth
+                            required
                         />
                     </Grid>
                     <Grid item xs={12}>
-                        <TextField
-                            fullWidth
-                            label="Номер телефона"
-                            name="phoneNumber"
+                        <InputMask
+                            mask="+7(999)999-99-99"
                             value={formData.phoneNumber}
                             onChange={handleChange}
-                            error={!!formErrors.phoneNumber}
-                            helperText={formErrors.phoneNumber}
-                        />
+                            name="phoneNumber"
+                            maskChar="_"
+                        >
+                            {(inputProps: any) => (
+                                <TextField
+                                    {...inputProps}
+                                    label="Номер телефона"
+                                    fullWidth
+                                    error={!!errorMessage}
+                                />
+                            )}
+                        </InputMask>
                     </Grid>
                     <Grid item xs={12}>
                         <TextField
@@ -263,46 +339,51 @@ const RegistrationForm: React.FC = () => {
                     </Grid>
                     <Grid item xs={12}>
                         <TextField
-                            fullWidth
                             label="О себе"
                             name="aboutUser"
                             value={formData.aboutUser}
                             onChange={handleChange}
+                            fullWidth
                             multiline
                             rows={4}
                         />
                     </Grid>
-                    {successMessage && (
+                    {successMessage ? (
                         <Grid item xs={12}>
                             <Alert severity="success">{successMessage}</Alert>
                             <Button
                                 onClick={handleRedirectToEmail}
                                 variant="contained"
                                 color="primary"
-                                sx={{ mt: 2 }}
+                                sx={{mt: 2}}
                                 fullWidth
                             >
                                 Перейти в почту
                             </Button>
                         </Grid>
+                    ) : (
+                        <>
+                            {errorMessage && (
+                                <Grid item xs={12}>
+                                    <Alert severity="error">{errorMessage}</Alert>
+                                </Grid>
+                            )}
+                            <Grid item xs={12}>
+                                <Button
+                                    type="submit"
+                                    variant="contained"
+                                    color="primary"
+                                    fullWidth
+                                    disabled={loading}
+                                    sx={{mt: 2}}
+                                >
+                                    {loading ? <CircularProgress size={24}/> : 'Зарегистрироваться'}
+                                </Button>
+                            </Grid>
+                        </>
+
                     )}
-                    {errorMessage && (
-                        <Grid item xs={12}>
-                            <Alert severity="error">{errorMessage}</Alert>
-                        </Grid>
-                    )}
-                    <Grid item xs={12}>
-                        <Button
-                            type="submit"
-                            variant="contained"
-                            color="primary"
-                            fullWidth
-                            disabled={loading}
-                            sx={{ mt: 2 }}
-                        >
-                            {loading ? <CircularProgress size={24} /> : 'Зарегистрироваться'}
-                        </Button>
-                    </Grid>
+
                 </Grid>
             </form>
         </Box>
@@ -310,3 +391,4 @@ const RegistrationForm: React.FC = () => {
 };
 
 export default RegistrationForm;
+
