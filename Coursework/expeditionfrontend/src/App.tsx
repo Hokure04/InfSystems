@@ -6,6 +6,11 @@ import {createTheme, ThemeProvider} from "@mui/material";
 import Layout from "./Layout.tsx";
 import ActivationPage from "./auth/ActivationPage.tsx";
 import ExRoute from "./examples/ExRoute.tsx";
+import ExPermit from "./examples/ExPermit.tsx";
+import ExReport from "./examples/ExReport.tsx";
+import ExSupplies from "./examples/ExSupplies.tsx";
+import ExVehicle from "./examples/ExVehicle.tsx";
+import ExExpedition from "./examples/ExExpedition.tsx";
 
 
 const theme = createTheme({
@@ -32,8 +37,11 @@ const App: React.FC = () => {
 
                         {/* examples */}
                         <Route path="/route" element={<ExRoute/>}/>
-
-
+                        <Route path="/permit" element={<ExPermit/>}/>
+                        <Route path="/report" element={<ExReport/>}/>
+                        <Route path="/supplies" element={<ExSupplies/>}/>
+                        <Route path="/vehicle" element={<ExVehicle/>}/>
+                        <Route path="/expedition" element={<ExExpedition/>}/>
 
 
                         {/* Добавьте другие маршруты, если нужно */}
