@@ -3,6 +3,7 @@ import { Box, Typography, Button } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import {Equipment} from "../entities/equipment/Equipment.ts";
 import EquipmentCard from "../entities/equipment/EquipmentCard.tsx";
+import MapWithRoute from "../map/MapWithRoute.tsx";
 
 interface User {
     id: number;
@@ -106,7 +107,7 @@ const HomePage: React.FC = () => {
             </Button>
 
             <Box width={600}>
-                <EquipmentCard equipment={sampleEquipment}/>
+                <MapWithRoute></MapWithRoute>
             </Box>
         </Box>
     );
