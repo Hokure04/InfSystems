@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, {useEffect, useState} from "react";
 import { YMaps, Map, Polyline } from "@pbe/react-yandex-maps";
 import { Button } from "@mui/material";
 
@@ -9,6 +9,27 @@ interface Route {
 const YandexMapComponent: React.FC = () => {
     const [route, setRoute] = useState<Route>({ coordinates: [] });
     const [isDrawing, setIsDrawing] = useState(false);
+    const [userLocation, setUserLocation] = useState<[number, number] | undefined>(undefined);
+
+    // Получение текущего местоположения пользователя
+    useEffect(() => {
+        if ("geolocation" in navigator) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const { latitude, longitude } = position.coords;
+                    setUserLocation([latitude, longitude]);
+                },
+                (error) => {
+                    console.error("Ошибка получения местоположения:", error);
+                    // Устанавливаем координаты по умолчанию, если доступ запрещен
+                    setUserLocation([55.751574, 37.573856]); // Москва
+                }
+            );
+        } else {
+            console.error("Geolocation API не поддерживается вашим браузером");
+            setUserLocation([55.751574, 37.573856]); // Москва
+        }
+    }, []);
 
     const handleMapClick = (e: any) => {
         if (!isDrawing) return;
@@ -51,10 +72,12 @@ const YandexMapComponent: React.FC = () => {
     };
 
     return (
+        userLocation && (
+
         <div style={{ position: "relative", height: "100vh" }}>
             <YMaps>
                 <Map
-                    defaultState={{ center: [55.751574, 37.573856], zoom: 9 }}
+                    defaultState={{ center: userLocation, zoom: 9 }}
                     width="100%"
                     height="90%"
                     onClick={handleMapClick}
@@ -91,6 +114,7 @@ const YandexMapComponent: React.FC = () => {
                 </Button>
             </div>
         </div>
+        )
     );
 };
 
