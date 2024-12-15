@@ -3,7 +3,7 @@ import { Box, Typography, Button } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import {Equipment} from "../entities/equipment/Equipment.ts";
 import EquipmentCard from "../entities/equipment/EquipmentCard.tsx";
-import MapWithRoute from "../map/MapWithRoute.tsx";
+import MapWithRoute from "../map/YandexMapComponent.tsx";
 
 interface User {
     id: number;
@@ -106,9 +106,6 @@ const HomePage: React.FC = () => {
                 Выйти
             </Button>
 
-            <Box width={600}>
-                <MapWithRoute></MapWithRoute>
-            </Box>
         </Box>
     );
 };

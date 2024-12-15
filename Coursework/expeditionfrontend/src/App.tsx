@@ -11,6 +11,8 @@ import ExReport from "./examples/ExReport.tsx";
 import ExSupplies from "./examples/ExSupplies.tsx";
 import ExVehicle from "./examples/ExVehicle.tsx";
 import ExExpedition from "./examples/ExExpedition.tsx";
+import MapSettings from "./map/MapSettings.tsx";
+import MapPage from "./map/MapPage.tsx";
 
 
 const theme = createTheme({
@@ -32,6 +34,8 @@ const App: React.FC = () => {
                         <Route path="/home" element={<HomePage/>}/>
                         <Route path="/activate" element={<ActivationPage/>}/>
                         <Route path="/auth" element={<AuthPage/>}/>
+                        <Route path="/map" element={<MapPage/>}/>
+                        <Route path="/map-settings" element={<MapSettings/>}/>
 
 
 
@@ -42,6 +46,9 @@ const App: React.FC = () => {
                         <Route path="/supplies" element={<ExSupplies/>}/>
                         <Route path="/vehicle" element={<ExVehicle/>}/>
                         <Route path="/expedition" element={<ExExpedition/>}/>
+
+
+
 
 
                         {/* Добавьте другие маршруты, если нужно */}
