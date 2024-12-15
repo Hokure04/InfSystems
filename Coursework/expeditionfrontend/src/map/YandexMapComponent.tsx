@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from "react";
-import {YMaps, Map, Polyline} from "@pbe/react-yandex-maps";
+import {YMaps, Map, Polyline, Placemark} from "@pbe/react-yandex-maps";
 import {Box, IconButton, Tooltip} from "@mui/material";
 import SettingsIcon from '@mui/icons-material/Settings';
 import DrawIcon from "@mui/icons-material/Brush";
@@ -46,6 +46,7 @@ const YandexMapComponent: React.FC<YandexMapProps> = ({ width, height }) => {
         setRoute((prevRoute) => ({
             coordinates: [...prevRoute.coordinates, coords],
         }));
+
     };
 
     const saveGeoJSON = () => {
@@ -97,13 +98,10 @@ const YandexMapComponent: React.FC<YandexMapProps> = ({ width, height }) => {
             }}>
                 <Box position={"relative"} height={"100%"} width={"100%"} display={"flex"} flexDirection={"column"}
                      alignItems={"center"}>
-
-
                     <YMaps query={{
                         apikey: "2bfb7c04-be84-48bc-a467-c68c888de2aa",
                         lang: "ru_RU",
                     }}>
-
                         <Map
                             defaultState={{
                                 center: userLocation,
@@ -165,6 +163,22 @@ const YandexMapComponent: React.FC<YandexMapProps> = ({ width, height }) => {
                                     strokeOpacity: 0.5,
                                 }}
                             />
+                            {route.coordinates.map((point, index) => {
+                                // Устанавливаем стиль для начальной и конечной точек
+                                let iconPreset = "islands#blueDotIcon"; // Стандартная точка
+                                if (index === 0) iconPreset = "islands#redDotIcon"; // Начальная точка
+                                if (index === route.coordinates.length - 1) iconPreset = "islands#blueIcon"; // Конечная точка
+
+                                return (
+                                    <Placemark
+                                        key={index}
+                                        geometry={point}
+                                        options={{
+                                            preset: iconPreset,
+                                        }}
+                                    />
+                                );
+                            })}
                         </Map>
                     </YMaps>
                 </Box>
