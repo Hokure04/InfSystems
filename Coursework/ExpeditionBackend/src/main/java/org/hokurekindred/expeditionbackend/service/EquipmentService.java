@@ -58,12 +58,8 @@ public class EquipmentService {
         Equipment equipment = equipmentRepository.findById(equipmentId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Equipment not found"));
         Expedition expedition = expeditionRepository.findById(expeditionId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Expedition not found"));
 
-        if (equipment.getReservation()) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Equipment is already reserved");
-        }
-
-        if (!equipment.getExpeditionList().isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Equipment is already assigned to another expedition");
+        if(!equipment.getExpeditionList().isEmpty()){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Equipment already assigned to expedition");
         }
 
         equipment.getExpeditionList().add(expedition);

@@ -109,6 +109,9 @@ const AppMenu: React.FC = () => {
                     <Button color="inherit" onClick={() => navigate("/expedition")}>
                         Экспедиции
                     </Button>
+                    <Button color="inherit" onClick={() => navigate("/create")}>
+                        Создать экспедиции
+                    </Button>
                     <Button color="inherit" onClick={() => navigate("/rent")}>
                         Аренда
                     </Button>

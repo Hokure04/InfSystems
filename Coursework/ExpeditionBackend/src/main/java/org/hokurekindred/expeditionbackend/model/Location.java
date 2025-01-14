@@ -11,6 +11,10 @@ import lombok.NoArgsConstructor;
 
 import java.util.List;
 
+@JsonIdentityInfo(
+        generator = ObjectIdGenerators.PropertyGenerator.class,
+        property = "locationId"
+)
 @Entity
 @Table(name = "location")
 @Data

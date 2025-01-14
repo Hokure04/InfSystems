@@ -17,6 +17,7 @@ const VehicleCard: React.FC<VehicleCardProps> = ({ vehicle }) => {
     const [selectedExpedition, setSelectedExpedition] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
     const [userId, setUserId] = useState<number | null>(null);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
     useEffect(() => {
         const storedUser = localStorage.getItem('user');
@@ -65,12 +66,13 @@ const VehicleCard: React.FC<VehicleCardProps> = ({ vehicle }) => {
             const expeditionId = parseInt(selectedExpedition, 10);
             const response = await api.post(`/vehicles/${vehicle.vehicleId}/expeditions/${expeditionId}`);
             console.log('Транспортное средство добавлено в экспедицию:', response.data.message);
+            setErrorMessage(null);
         } catch (error: any) {
-            const message = error.response?.data?.Message || "Ошибка при добавлении транспортного средства в экспедицию.";
+            const message = error.response?.data?.Message || "Транспорт уже принадлежит экспедиций";
             console.error(message);
+            setErrorMessage(message);
         }
     };
-
 
     return (
         <Card variant="outlined" style={{ marginBottom: 16 }}>
@@ -130,7 +132,7 @@ const VehicleCard: React.FC<VehicleCardProps> = ({ vehicle }) => {
                             {expeditions.map((expedition, index) => (
                                 <MenuItem
                                     key={`expedition-${expedition.id ?? index}`}
-                                    value={String(expedition.id ?? index+1)}
+                                    value={String(expedition.id ?? index + 1)}
                                 >
                                     {expedition.name}
                                 </MenuItem>
@@ -142,6 +144,14 @@ const VehicleCard: React.FC<VehicleCardProps> = ({ vehicle }) => {
                         Экспедиций нет.
                     </Typography>
                 )}
+
+                {/* Отображение ошибки, если она есть */}
+                {errorMessage && (
+                    <Typography variant="body2" color="error" style={{ marginTop: 16 }}>
+                        {errorMessage}
+                    </Typography>
+                )}
+
                 <Button
                     variant="contained"
                     color="primary"
@@ -156,4 +166,5 @@ const VehicleCard: React.FC<VehicleCardProps> = ({ vehicle }) => {
     );
 };
 export default VehicleCard;
+
 

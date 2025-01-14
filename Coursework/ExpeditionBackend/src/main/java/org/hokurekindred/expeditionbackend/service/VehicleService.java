@@ -55,15 +55,19 @@ public class VehicleService {
     }
 
     public boolean assignVehicle(Long vehicleId, Long expeditionId) {
-        Vehicle vehicle = vehicleRepository.findById(vehicleId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Vehicle not found"));
-        Expedition expedition = expeditionRepository.findById(expeditionId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Expedition not found"));
+        Vehicle vehicle = vehicleRepository.findById(vehicleId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Vehicle not found"));
 
-        if (!vehicle.getExpeditionList().contains(expedition)) {
-            vehicle.getExpeditionList().add(expedition);
-            vehicleRepository.save(vehicle);
-            return true;
+        Expedition expedition = expeditionRepository.findById(expeditionId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Expedition not found"));
+
+        if (!vehicle.getExpeditionList().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Vehicle already assigned to another expedition");
         }
-        return false;
+
+        vehicle.getExpeditionList().add(expedition);
+        vehicleRepository.save(vehicle);
+        return true;
     }
 
     public boolean removeVehicle(Long vehicleId, Long expeditionId) {

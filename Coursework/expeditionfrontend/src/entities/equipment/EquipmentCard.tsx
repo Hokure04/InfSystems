@@ -29,6 +29,7 @@ const EquipmentCard: React.FC<EquipmentProps> = ({equipment}) => {
     const [selectedExpedition, setSelectedExpedition] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
     const[userId, setUserId] = useState<number | null>(null);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
     useEffect(() => {
         const storedUser = localStorage.getItem('user');
@@ -77,9 +78,11 @@ const EquipmentCard: React.FC<EquipmentProps> = ({equipment}) => {
             const expeditionId = parseInt(selectedExpedition, 10);
             const response = await api.post(`/equipment/${equipment.equipmentId}/expeditions/${expeditionId}`);
             console.log('Оборудование добавлено в экспедицию:', response.data.message);
+            setErrorMessage(null);
         }catch (error: any){
-            const message = error.response?.data?.Message || "Ошибка при добавлении оборудования к экспедиции";
+            const message = error.response?.data?.Message || "Оборудование уже добавлено в экспедицию";
             console.error(message);
+            setErrorMessage(message);
         }
     };
 
@@ -160,6 +163,12 @@ const EquipmentCard: React.FC<EquipmentProps> = ({equipment}) => {
                 ) : (
                     <Typography variant="body2" style={{ marginTop: 8, fontStyle: 'italic' }}>
                         Экспедиций нет.
+                    </Typography>
+                )}
+                {/* Отображение ошибки, если она есть */}
+                {errorMessage && (
+                    <Typography variant="body2" color="error" style={{ marginTop: 16 }}>
+                        {errorMessage}
                     </Typography>
                 )}
                 <Button

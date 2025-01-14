@@ -14,6 +14,7 @@ import MapSettings from './map/MapSettings.tsx';
 import MapPage from './map/MapPage.tsx';
 import ExpeditionPage from '../src/pages/ExpeditionPage.tsx';
 import RentPage from '../src/pages/RentPage.tsx'
+import CreateExpeditionPage from '../src/pages/CreateExpeditionPage.tsx'
 
 
 const theme = createTheme({
@@ -43,6 +44,7 @@ const App: React.FC = () => {
                         <Route path="/vehicle" element={<ExVehicle />} />
                         <Route path="/expedition" element={<ExpeditionPage />} />
                         <Route path="/rent" element={<RentPage />} />
+                        <Route path="/create" element={<CreateExpeditionPage />} />
 
                         <Route path="*" element={<Navigate to="/" />} />
                     </Routes>
