@@ -9,7 +9,7 @@ const MapPage: React.FC = () => {
             <Typography variant="h4" mb={2}>
                 Карта
             </Typography>
-            <YandexMapComponent height={"60%"} width={"90%"}>
+            <YandexMapComponent height={"60%"} width={"90%"} options={true} initialRoute={""}>
             </YandexMapComponent>
         </Box>
     );

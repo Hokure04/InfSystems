@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
-import { YMaps, Map, Polyline, Placemark } from "@pbe/react-yandex-maps";
-import {Box, IconButton, Snackbar, SnackbarContent, Tooltip} from "@mui/material";
+import React, {useEffect, useState} from "react";
+import {YMaps, Map, Polyline, Placemark} from "@pbe/react-yandex-maps";
+import {Box, IconButton, Snackbar, SnackbarContent, Tooltip, Typography} from "@mui/material";
 import SettingsIcon from '@mui/icons-material/Settings';
 import DrawIcon from "@mui/icons-material/Brush";
 import SaveIcon from "@mui/icons-material/Save";
@@ -8,8 +8,9 @@ import UploadIcon from "@mui/icons-material/CloudUpload";
 import DeleteIcon from "@mui/icons-material/Delete";
 import CheckIcon from '@mui/icons-material/Check';
 import ExploreIcon from '@mui/icons-material/Explore';
+import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 
-import { useNavigate } from "react-router-dom";
+import {useNavigate} from "react-router-dom";
 
 interface Route {
     coordinates: number[][];
@@ -18,47 +19,84 @@ interface Route {
 interface YandexMapProps {
     width: string;
     height: string;
-    onRouteExport: (geoJson: any) => void; // Callback для передачи GeoJSON
-    onDistanceExport: (number: any) => void; // Callback
+    onRouteExport?: (geoJson: any) => void; // Callback для передачи GeoJSON
+    onDistanceExport?: (number: any) => void; // Callback
     initialRoute?: any; // Начальный маршрут в формате GeoJSON
+    options?: boolean;
 }
 
-const YandexMapComponent: React.FC<YandexMapProps> = ({ width, height, onRouteExport, onDistanceExport, initialRoute }) => {
+const YandexMapComponent: React.FC<YandexMapProps> = ({
+                                                          width,
+                                                          height,
+                                                          onRouteExport,
+                                                          onDistanceExport,
+                                                          initialRoute,
+                                                          options
+                                                      }) => {
     const navigate = useNavigate();
-    const [route, setRoute] = useState<Route>({ coordinates: [] });
+    const [route, setRoute] = useState<Route>({coordinates: []});
     const [isDrawing, setIsDrawing] = useState(false);
-    const [userLocation, setUserLocation] = useState<[number, number] | undefined>(undefined);
+    const [userLocation, setUserLocation] = useState<[number, number] | undefined>([55.751574, 37.573856]);
     const mapRef = React.useRef<any>(null);
     const [totalDistance, setTotalDistance] = useState<number>(0);
     const [errorMessage, setErrorMessage] = useState<string | null>(null); // Состояние для ошибки
+    const [errorInitMessage, setErrorInitMessage] = useState<string | null>(null); // Состояние для ошибки
+
 
 
     useEffect(() => {
-        if (initialRoute && initialRoute.geometry?.type === "LineString") {
-            setRoute({ coordinates: initialRoute.geometry.coordinates });
+            if (initialRoute) {
+                try {
+                    const geoJson = JSON.parse(initialRoute as string);
+                    // Проверяем, что GeoJSON является массивом объектов с типом "Feature"
+                    if (Array.isArray(geoJson) && geoJson[0].geometry?.type === "MultiLineString") {
+                        // Извлекаем координаты из всех MultiLineString
+                        const allCoordinates = geoJson.flatMap(feature => feature.geometry.coordinates.flat());
+                        setRoute({coordinates: allCoordinates});
+                        zoomToRoute(allCoordinates);
+                    }
+                    // Проверка для типа "LineString"
+                    else if (geoJson.geometry?.type === "LineString") {
+                        setRoute({coordinates: geoJson.geometry.coordinates});
+                        zoomToRoute(geoJson.geometry.coordinates);
+                    } else {
+                        setErrorInitMessage("Неверный тип геометрии в GeoJSON");
+                    }
+                } catch (error) {
+                    // Ошибка при чтении или парсинге
+                    setErrorInitMessage("Ошибка при загрузке маршрута: " + error);
+                }
+            }
 
             // Рассчитываем центр маршрута и зум
-            zoomToRoute(initialRoute.geometry.coordinates);
-        } else {
+         else {
             if ("geolocation" in navigator) {
                 navigator.geolocation.getCurrentPosition(
                     (position) => {
-                        const { latitude, longitude } = position.coords;
-                        setUserLocation([latitude, longitude]);
+                        const {latitude, longitude} = position.coords;
+                        if (latitude != null && longitude != null) {
+                            setUserLocation([latitude, longitude]);
+
+                        }
                     },
                     () => {
-                        // Устанавливаем координаты по умолчанию, если доступ запрещен
-                        setUserLocation([55.751574, 37.573856]); // Москва
                     }
                 );
-            } else {
-                setUserLocation([55.751574, 37.573856]); // Москва
+
             }
         }
     }, [initialRoute]);
 
     const zoomToRoute = (coordinates: number[][]) => {
-        if (mapRef.current) {
+        if (coordinates.length > 300) {
+            // Устанавливаем центр и зум карты
+            try {
+                mapRef.current.setCenter([coordinates[0][0], coordinates[0][1]]);
+
+            } catch (e) {
+
+            }
+        } else if (mapRef.current) {
             // Рассчитываем минимальные и максимальные значения широты и долготы
             let minLat = Infinity, maxLat = -Infinity, minLng = Infinity, maxLng = -Infinity;
 
@@ -85,12 +123,6 @@ const YandexMapComponent: React.FC<YandexMapProps> = ({ width, height, onRouteEx
         }
     };
 
-
-    useEffect(() => {
-        if (initialRoute && initialRoute.geometry?.type === "LineString") {
-            setRoute({ coordinates: initialRoute.geometry.coordinates });
-        }
-    }, [initialRoute]);
 
     useEffect(() => {
         setTotalDistance(calculateDistance(route.coordinates));
@@ -176,15 +208,20 @@ const YandexMapComponent: React.FC<YandexMapProps> = ({ width, height, onRouteEx
             try {
                 const geoJson = JSON.parse(e.target?.result as string);
 
-                // Проверяем, что GeoJSON содержит корректный маршрут
-                if (geoJson.geometry?.type === "LineString") {
-                    setRoute({ coordinates: geoJson.geometry.coordinates });
-                    zoomToRoute(geoJson.geometry.coordinates);
-
-                } else {
-                    setErrorMessage("Ошибка при загрузке маршрута");
+                // Проверяем, что GeoJSON является массивом объектов с типом "Feature"
+                if (Array.isArray(geoJson) && geoJson[0].geometry?.type === "MultiLineString") {
+                    // Извлекаем координаты из всех MultiLineString
+                    const allCoordinates = geoJson.flatMap(feature => feature.geometry.coordinates.flat());
+                    setRoute({coordinates: allCoordinates});
+                    zoomToRoute(allCoordinates);
                 }
-
+                // Проверка для типа "LineString"
+                else if (geoJson.geometry?.type === "LineString") {
+                    setRoute({coordinates: geoJson.geometry.coordinates});
+                    zoomToRoute(geoJson.geometry.coordinates);
+                } else {
+                    setErrorMessage("Неверный тип геометрии в GeoJSON");
+                }
             } catch (error) {
                 // Ошибка при чтении или парсинге
                 setErrorMessage("Ошибка при загрузке маршрута");
@@ -193,14 +230,14 @@ const YandexMapComponent: React.FC<YandexMapProps> = ({ width, height, onRouteEx
 
         reader.onerror = () => {
             // Обработка ошибок при чтении файла
-            alert("Ошибка при чтении файла. Пожалуйста, убедитесь, что файл в формате GeoJSON.");
+            setErrorMessage("Ошибка при чтении файла. Пожалуйста, убедитесь, что файл в формате GeoJSON.");
         };
 
         reader.readAsText(file);
     };
 
     const clearRoute = () => {
-        setRoute({ coordinates: [] });
+        setRoute({coordinates: []});
     };
 
     const handleOpenSettings = () => {
@@ -209,6 +246,32 @@ const YandexMapComponent: React.FC<YandexMapProps> = ({ width, height, onRouteEx
 
     if (!userLocation) {
         return <div>Загрузка карты...</div>;
+    }
+
+    if (errorInitMessage) {
+        return <Box
+            sx={{
+                width: width, // Задайте ширину
+                height: height, // Задайте высоту
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: "rgb(60, 60, 60)", // Светло-красный фон
+
+                padding: "16px",
+                textAlign: "center",
+            }}
+        >
+            <WarningAmberIcon sx={{ color: "red", mb: 1, scale: 5, marginBottom: 10 }} />
+
+            <Typography variant="h6" sx={{ mb: 1 }}>
+                Не удалось отрисовать маршрут
+            </Typography>
+            <Typography variant="body2">
+                {errorInitMessage}
+            </Typography>
+        </Box>;
     }
 
     return (
@@ -255,23 +318,23 @@ const YandexMapComponent: React.FC<YandexMapProps> = ({ width, height, onRouteEx
 
                         >
                             {totalDistance > 0 && (
-                            <Box
-                                position="absolute"
-                                top={0}
+                                <Box
+                                    position="absolute"
+                                    top={0}
 
-                                zIndex={2}
-                                sx={{
-                                    backgroundColor: "rgb(60, 60, 60)",
-                                    padding: "5px 10px",
-                                    borderBottomRightRadius: "10px",
-                                    fontWeight: "bold",
-                                }}
-                            >
-                                Дистанция маршрута: {totalDistance >= 1000
+                                    zIndex={2}
+                                    sx={{
+                                        backgroundColor: "rgb(60, 60, 60)",
+                                        padding: "5px 10px",
+                                        borderBottomRightRadius: "10px",
+                                        fontWeight: "bold",
+                                    }}
+                                >
+                                    Дистанция маршрута: {totalDistance >= 1000
                                     ? `${(totalDistance / 1000).toFixed(2)} км`
                                     : `${Math.round(totalDistance)} м`}
-                            </Box>
-                                )}
+                                </Box>
+                            )}
                             <Box
                                 position={"absolute"}
                                 right={0}
@@ -286,29 +349,34 @@ const YandexMapComponent: React.FC<YandexMapProps> = ({ width, height, onRouteEx
                                 }}
 
                             >
-                                <Tooltip title="Настройки" placement="left" >
+                                <Tooltip title="Настройки" placement="left">
 
                                     <IconButton color="primary" onClick={handleOpenSettings}>
-                                        <SettingsIcon />
+                                        <SettingsIcon/>
                                     </IconButton>
                                 </Tooltip>
 
-                                <Tooltip title="Сохранить GeoJSON" placement="left">
-                                    <IconButton color="primary" onClick={saveGeoJSON}>
-                                        <SaveIcon />
-                                    </IconButton>
-                                </Tooltip>
-                                <Tooltip title="Загрузить GeoJSON" placement="left">
-                                    <IconButton color="primary" component="label">
-                                        <UploadIcon />
-                                        <input
-                                            type="file"
-                                            accept=".geojson"
-                                            hidden
-                                            onChange={loadGeoJSON}
-                                        />
-                                    </IconButton>
-                                </Tooltip>
+                                {options && (
+                                    <Tooltip title="Сохранить GeoJSON" placement="left">
+                                        <IconButton color="primary" onClick={saveGeoJSON}>
+                                            <SaveIcon/>
+                                        </IconButton>
+                                    </Tooltip>
+                                )}
+                                {options && (
+
+                                    <Tooltip title="Загрузить GeoJSON" placement="left">
+                                        <IconButton color="primary" component="label">
+                                            <UploadIcon/>
+                                            <input
+                                                type="file"
+                                                accept=".geojson"
+                                                hidden
+                                                onChange={loadGeoJSON}
+                                            />
+                                        </IconButton>
+                                    </Tooltip>
+                                )}
                                 <Tooltip
                                     title={"Центр маршрута"}
                                     placement="left"
@@ -318,48 +386,62 @@ const YandexMapComponent: React.FC<YandexMapProps> = ({ width, height, onRouteEx
                                         onClick={() => zoomToRoute(route.coordinates)}
                                         disabled={route.coordinates.length == null || route.coordinates.length === 0}
                                     >
-                                        <ExploreIcon />
+                                        <ExploreIcon/>
                                     </IconButton>
                                 </Tooltip>
-                                <Tooltip
-                                    title={isDrawing ? "Завершить рисование" : "Рисовать маршрут"}
-                                    placement="left"
-                                >
-                                    <IconButton
-                                        color={isDrawing ? "success" : "primary"}
-                                        onClick={() => setIsDrawing(!isDrawing)}
+                                {options && (
+
+                                    <Tooltip
+                                        title={isDrawing ? "Завершить рисование" : "Рисовать маршрут"}
+                                        placement="left"
                                     >
-                                        <DrawIcon />
-                                    </IconButton>
-                                </Tooltip>
-
-                                <Tooltip title="Подтвердить маршрут" placement="left">
-                                    <IconButton
-
-                                        color={"primary"}
-                                        onClick={() => {
-                                            const geoJson = {
-                                                type: "Feature",
-                                                geometry: {
-                                                    type: "LineString",
-                                                    coordinates: route.coordinates,
-                                                },
-                                            };
-                                            onDistanceExport(totalDistance);
-                                            onRouteExport(geoJson); // Передаем GeoJSON в родительский компонент
-                                        }}
-                                        disabled={route.coordinates.length === 1 || route.coordinates.length === 0}
-                                    >
-                                        <CheckIcon />
-                                    </IconButton>
-                                </Tooltip>
+                                        <IconButton
+                                            color={isDrawing ? "success" : "primary"}
+                                            onClick={() => setIsDrawing(!isDrawing)}
+                                        >
+                                            <DrawIcon/>
+                                        </IconButton>
+                                    </Tooltip>
+                                )}
 
 
-                                <Tooltip title="Очистить маршрут" placement="left">
-                                    <IconButton color="error" onClick={clearRoute}>
-                                        <DeleteIcon />
-                                    </IconButton>
-                                </Tooltip>
+                                {(onDistanceExport || onRouteExport) && options && (
+                                    <Tooltip title="Подтвердить маршрут" placement="left">
+                                        <IconButton
+
+                                            color={"primary"}
+                                            onClick={() => {
+                                                const geoJson = {
+                                                    type: "Feature",
+                                                    geometry: {
+                                                        type: "LineString",
+                                                        coordinates: route.coordinates,
+                                                    },
+                                                };
+                                                if (onDistanceExport) {
+
+                                                    onDistanceExport(totalDistance);
+                                                }
+                                                if (onRouteExport) {
+                                                    onRouteExport(geoJson); // Передаем GeoJSON в родительский компонент
+                                                }
+                                            }}
+                                            disabled={route.coordinates.length === 1 || route.coordinates.length === 0}
+                                        >
+                                            <CheckIcon/>
+                                        </IconButton>
+                                    </Tooltip>
+                                )}
+
+
+                                {options && (
+
+                                    <Tooltip title="Очистить маршрут" placement="left">
+                                        <IconButton color="error" onClick={clearRoute}>
+                                            <DeleteIcon/>
+                                        </IconButton>
+                                    </Tooltip>
+                                )}
                             </Box>
 
                             <Polyline

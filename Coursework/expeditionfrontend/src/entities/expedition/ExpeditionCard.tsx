@@ -238,7 +238,7 @@ const ExpeditionCard: React.FC<ExpeditionCardProps> = ({ expedition, onUpdateExp
                             borderRadius={2}
                             overflow="hidden"
                         >
-                            <YandexMapComponent width="100%" height="100%" />
+                            <YandexMapComponent width="100%" height="100%" initialRoute={expedition.route?.startPoint || undefined} />
                         </Box>
                     </Grid>
                 </Grid>
