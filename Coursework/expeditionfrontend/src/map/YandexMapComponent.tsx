@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { YMaps, Map, Polyline, Placemark } from "@pbe/react-yandex-maps";
-import { Box, IconButton, Tooltip } from "@mui/material";
+import {Box, IconButton, Snackbar, SnackbarContent, Tooltip} from "@mui/material";
 import SettingsIcon from '@mui/icons-material/Settings';
 import DrawIcon from "@mui/icons-material/Brush";
 import SaveIcon from "@mui/icons-material/Save";
 import UploadIcon from "@mui/icons-material/CloudUpload";
 import DeleteIcon from "@mui/icons-material/Delete";
 import CheckIcon from '@mui/icons-material/Check';
+import ExploreIcon from '@mui/icons-material/Explore';
 
 import { useNavigate } from "react-router-dom";
 
@@ -29,26 +30,61 @@ const YandexMapComponent: React.FC<YandexMapProps> = ({ width, height, onRouteEx
     const [userLocation, setUserLocation] = useState<[number, number] | undefined>(undefined);
     const mapRef = React.useRef<any>(null);
     const [totalDistance, setTotalDistance] = useState<number>(0);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null); // Состояние для ошибки
 
 
-    // Получение текущего местоположения пользователя
     useEffect(() => {
+        if (initialRoute && initialRoute.geometry?.type === "LineString") {
+            setRoute({ coordinates: initialRoute.geometry.coordinates });
 
-        if ("geolocation" in navigator) {
-            navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    const { latitude, longitude } = position.coords;
-                    setUserLocation([latitude, longitude]);
-                },
-                () => {
-                    // Устанавливаем координаты по умолчанию, если доступ запрещен
-                    setUserLocation([55.751574, 37.573856]); // Москва
-                }
-            );
+            // Рассчитываем центр маршрута и зум
+            zoomToRoute(initialRoute.geometry.coordinates);
         } else {
-            setUserLocation([55.751574, 37.573856]); // Москва
+            if ("geolocation" in navigator) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const { latitude, longitude } = position.coords;
+                        setUserLocation([latitude, longitude]);
+                    },
+                    () => {
+                        // Устанавливаем координаты по умолчанию, если доступ запрещен
+                        setUserLocation([55.751574, 37.573856]); // Москва
+                    }
+                );
+            } else {
+                setUserLocation([55.751574, 37.573856]); // Москва
+            }
         }
-    }, []);
+    }, [initialRoute]);
+
+    const zoomToRoute = (coordinates: number[][]) => {
+        if (mapRef.current) {
+            // Рассчитываем минимальные и максимальные значения широты и долготы
+            let minLat = Infinity, maxLat = -Infinity, minLng = Infinity, maxLng = -Infinity;
+
+            coordinates.forEach((point) => {
+                const [lat, lng] = point;
+                minLat = Math.min(minLat, lat);
+                maxLat = Math.max(maxLat, lat);
+                minLng = Math.min(minLng, lng);
+                maxLng = Math.max(maxLng, lng);
+            });
+
+            // Вычисляем центр маршрута
+            const centerLat = (minLat + maxLat) / 2;
+            const centerLng = (minLng + maxLng) / 2;
+
+            // Вычисляем зум, основываясь на размерах маршрута
+            const latDiff = maxLat - minLat;
+            const lngDiff = maxLng - minLng;
+            const zoomLevel = Math.log2(360 / Math.max(latDiff, lngDiff)); // Корректировка зума
+
+            // Устанавливаем центр и зум карты
+            mapRef.current.setCenter([centerLat, centerLng]);
+            mapRef.current.setZoom(zoomLevel);
+        }
+    };
+
 
     useEffect(() => {
         if (initialRoute && initialRoute.geometry?.type === "LineString") {
@@ -137,11 +173,29 @@ const YandexMapComponent: React.FC<YandexMapProps> = ({ width, height, onRouteEx
 
         const reader = new FileReader();
         reader.onload = (e) => {
-            const geoJson = JSON.parse(e.target?.result as string);
-            if (geoJson.geometry?.type === "LineString") {
-                setRoute({ coordinates: geoJson.geometry.coordinates });
+            try {
+                const geoJson = JSON.parse(e.target?.result as string);
+
+                // Проверяем, что GeoJSON содержит корректный маршрут
+                if (geoJson.geometry?.type === "LineString") {
+                    setRoute({ coordinates: geoJson.geometry.coordinates });
+                    zoomToRoute(geoJson.geometry.coordinates);
+
+                } else {
+                    setErrorMessage("Ошибка при загрузке маршрута");
+                }
+
+            } catch (error) {
+                // Ошибка при чтении или парсинге
+                setErrorMessage("Ошибка при загрузке маршрута");
             }
         };
+
+        reader.onerror = () => {
+            // Обработка ошибок при чтении файла
+            alert("Ошибка при чтении файла. Пожалуйста, убедитесь, что файл в формате GeoJSON.");
+        };
+
         reader.readAsText(file);
     };
 
@@ -256,6 +310,18 @@ const YandexMapComponent: React.FC<YandexMapProps> = ({ width, height, onRouteEx
                                     </IconButton>
                                 </Tooltip>
                                 <Tooltip
+                                    title={"Центр маршрута"}
+                                    placement="left"
+                                >
+                                    <IconButton
+                                        color={"primary"}
+                                        onClick={() => zoomToRoute(route.coordinates)}
+                                        disabled={route.coordinates.length == null || route.coordinates.length === 0}
+                                    >
+                                        <ExploreIcon />
+                                    </IconButton>
+                                </Tooltip>
+                                <Tooltip
                                     title={isDrawing ? "Завершить рисование" : "Рисовать маршрут"}
                                     placement="left"
                                 >
@@ -322,6 +388,27 @@ const YandexMapComponent: React.FC<YandexMapProps> = ({ width, height, onRouteEx
                         </Map>
                     </YMaps>
                 </Box>
+                {/* Snackbar для отображения ошибки */}
+                <Snackbar
+                    open={!!errorMessage} // Показываем Snackbar, если ошибка есть
+                    message={errorMessage}
+                    autoHideDuration={4000} // Закрыть через 4 секунды
+                    onClose={() => setErrorMessage(null)} // Закрытие сообщения
+                    anchorOrigin={{
+                        vertical: "bottom", // Позиция снизу
+                        horizontal: "left",
+                    }}
+                >
+                    <SnackbarContent
+
+                        style={{
+                            backgroundColor: "transparent",
+                            color: "red",
+                            border: "solid 2px red",
+                        }}
+                        message={errorMessage}
+                    />
+                </Snackbar>
             </div>
         )
     );
