@@ -1,6 +1,7 @@
 package org.hokurekindred.expeditionbackend.authentication.service;
 
 import org.hokurekindred.expeditionbackend.dto.LoginRequest;
+import org.hokurekindred.expeditionbackend.model.Expedition;
 import org.hokurekindred.expeditionbackend.model.User;
 import org.hokurekindred.expeditionbackend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,6 +11,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -59,6 +61,12 @@ public class UserService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User with ID" + userId + "not found"));
         user.setAboutUser(aboutUser);
         return userRepository.save(user);
+    }
+
+    public List<Expedition> getUserExpeditions(Long userId){
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User with id " + userId + "not found"));
+        return user.getExpeditionList();
     }
 
 }

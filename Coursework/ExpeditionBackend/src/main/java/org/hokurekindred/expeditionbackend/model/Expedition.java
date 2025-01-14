@@ -1,5 +1,8 @@
 package org.hokurekindred.expeditionbackend.model;
 
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -15,6 +18,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@JsonIdentityInfo(
+        generator = ObjectIdGenerators.PropertyGenerator.class,
+        property = "expeditionId"
+)
 @Entity
 @Table(name="expedition")
 @Data
@@ -71,6 +78,7 @@ public class Expedition {
     private List<Vehicle> vehicleList;
 
     @ManyToMany(mappedBy = "expeditionList")
+    @JsonManagedReference
     private List<User> userList;
 
     //Map, который будет хранить пользователь желающих присоединиться к экспедиции и их статусы
@@ -95,5 +103,4 @@ public class Expedition {
         }
         return true;
     }
-
 }

@@ -13,7 +13,7 @@ import java.util.Map;
 
 @CrossOrigin(origins = "http://localhost:5173")
 @RestController
-@RequestMapping("/vehicles")
+@RequestMapping("/api/vehicles")
 public class VehicleController {
     @Autowired
     private VehicleService vehicleService;

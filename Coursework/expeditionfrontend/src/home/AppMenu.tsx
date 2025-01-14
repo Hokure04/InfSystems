@@ -103,11 +103,14 @@ const AppMenu: React.FC = () => {
                     <IconButton color="inherit" onClick={() => navigate("/")}>
                         <HomeIcon/>
                     </IconButton>
-                    <Button color="inherit" onClick={() => navigate("/flat/create")}>
-                        Создать квартиру
-                    </Button>
                     <Button color="inherit" onClick={() => navigate("/map")}>
                         Карта
+                    </Button>
+                    <Button color="inherit" onClick={() => navigate("/expedition")}>
+                        Экспедиции
+                    </Button>
+                    <Button color="inherit" onClick={() => navigate("/rent")}>
+                        Аренда
                     </Button>
                     <Button color="inherit" onClick={handleImportMenuOpen}>
                         Импорт

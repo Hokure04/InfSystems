@@ -16,7 +16,7 @@ import java.util.Map;
 
 @CrossOrigin(origins = "http://localhost:5173")
 @RestController
-@RequestMapping("/equipment")
+@RequestMapping("/api/equipment")
 public class EquipmentController {
     @Autowired
     private EquipmentService equipmentService;

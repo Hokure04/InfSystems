@@ -1,5 +1,7 @@
 package org.hokurekindred.expeditionbackend.model;
 
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
@@ -9,6 +11,10 @@ import lombok.NoArgsConstructor;
 
 import java.util.List;
 
+@JsonIdentityInfo(
+        generator = ObjectIdGenerators.PropertyGenerator.class,
+        property = "locationId"
+)
 @Entity
 @Table(name = "location")
 @Data

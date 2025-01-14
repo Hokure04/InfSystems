@@ -3,6 +3,7 @@ package org.hokurekindred.expeditionbackend.controller;
 
 import org.hokurekindred.expeditionbackend.authentication.service.UserService;
 import org.hokurekindred.expeditionbackend.mapper.UserMapper;
+import org.hokurekindred.expeditionbackend.model.Expedition;
 import org.hokurekindred.expeditionbackend.model.User;
 import org.hokurekindred.expeditionbackend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,11 +14,12 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @CrossOrigin(origins = "http://localhost:5173")
 @RestController
-@RequestMapping("/users")
+@RequestMapping("/api/users")
 public class UserController {
     @Autowired
     UserService userService;
@@ -55,6 +57,20 @@ public class UserController {
         User changedUser = userService.updateUserInfo(userId, aboutUser);
         response.put("message", "Information about user updated successfully");
         response.put("user", changedUser);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+
+    }
+
+    @PreAuthorize("hasRole('USER')")
+    @GetMapping("/{userId}/expeditions")
+    public ResponseEntity<Map<String, Object>> getUserExpeditions(@PathVariable Long userId){
+        Map<String, Object> response = new HashMap<>();
+        List<Expedition> expeditionList = userService.getUserExpeditions(userId);
+        if(expeditionList.isEmpty()){
+            response.put("message", "No expeditions found for this user");
+        }else{
+            response.put("expeditions", expeditionList);
+        }
         return new ResponseEntity<>(response, HttpStatus.OK);
 
     }

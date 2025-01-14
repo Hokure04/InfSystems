@@ -51,7 +51,7 @@ import java.util.Map;
 
 @CrossOrigin(origins = "http://localhost:5173")
 @RestController
-@RequestMapping("/expeditions")
+@RequestMapping("/api/expeditions")
 public class ExpeditionController {
     @Autowired
     ExpeditionService expeditionService;

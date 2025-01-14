@@ -36,11 +36,17 @@ const UserCard: React.FC<UserCardProps> = ({ user }) => {
                     Roles:
                 </Typography>
                 <Grid container spacing={1}>
-                    {user.role.map((role) => (
-                        <Grid item key={role.id}>
-                            <Chip label={role.name} color="primary" />
-                        </Grid>
-                    ))}
+                    {user.role && Array.isArray(user.role) && user.role.length > 0 ? (
+                        user.role.map((role) => (
+                            <Grid item key={role.id}>
+                                <Chip label={role.name} color="primary" />
+                            </Grid>
+                        ))
+                    ) : (
+                        <Typography variant="body2" color="textSecondary">
+                            No roles assigned.
+                        </Typography>
+                    )}
                 </Grid>
             </CardContent>
         </Card>

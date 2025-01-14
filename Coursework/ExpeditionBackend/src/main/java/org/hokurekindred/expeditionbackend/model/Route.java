@@ -1,5 +1,7 @@
 package org.hokurekindred.expeditionbackend.model;
 
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -11,6 +13,11 @@ import lombok.NoArgsConstructor;
 
 import java.util.List;
 
+
+@JsonIdentityInfo(
+        generator = ObjectIdGenerators.PropertyGenerator.class,
+        property = "routeId"
+)
 @Entity
 @Table(name = "route")
 @Data

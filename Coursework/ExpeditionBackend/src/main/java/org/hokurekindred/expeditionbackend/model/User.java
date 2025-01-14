@@ -1,5 +1,8 @@
 package org.hokurekindred.expeditionbackend.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -11,6 +14,10 @@ import jakarta.validation.constraints.Size;
 import java.util.List;
 import java.util.Set;
 
+@JsonIdentityInfo(
+        generator = ObjectIdGenerators.PropertyGenerator.class,
+        property = "id"
+)
 @Entity
 @Table(name = "user_info")
 @Data
@@ -78,6 +85,7 @@ public class User {
     private Set<Role> role;
 
     @ManyToMany
+    @JsonBackReference
     @JoinTable(name = "expedition_participant", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "expedition_id"))
     private List<Expedition> expeditionList;
 
