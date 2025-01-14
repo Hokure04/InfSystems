@@ -17,6 +17,7 @@
     "@pbe/react-yandex-maps": "^1.2.5",
     "@react-google-maps/api": "^2.20.3",
     "axios": "^1.7.7",
+    "geolib": "^3.3.4",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-input-mask": "^2.0.4",

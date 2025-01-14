@@ -322,15 +322,6 @@ const RegistrationForm: React.FC = () => {
                     <Grid item xs={12}>
                         <TextField
                             fullWidth
-                            label="Роль в экспедиции"
-                            name="expeditionRole"
-                            value={formData.expeditionRole}
-                            onChange={handleChange}
-                        />
-                    </Grid>
-                    <Grid item xs={12}>
-                        <TextField
-                            fullWidth
                             label="Навык"
                             name="skill"
                             value={formData.skill}
