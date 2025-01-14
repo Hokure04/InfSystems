@@ -14,10 +14,7 @@ import lombok.NoArgsConstructor;
 
 import java.util.List;
 
-@JsonIdentityInfo(
-        generator = ObjectIdGenerators.PropertyGenerator.class,
-        property = "equipmentId"
-)
+
 @Entity
 @Table(name = "equipment")
 @Data

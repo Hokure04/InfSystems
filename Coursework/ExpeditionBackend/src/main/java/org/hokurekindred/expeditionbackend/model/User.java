@@ -14,10 +14,6 @@ import jakarta.validation.constraints.Size;
 import java.util.List;
 import java.util.Set;
 
-@JsonIdentityInfo(
-        generator = ObjectIdGenerators.PropertyGenerator.class,
-        property = "id"
-)
 @Entity
 @Table(name = "user_info")
 @Data

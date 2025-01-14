@@ -42,7 +42,7 @@ const VehicleCard: React.FC<VehicleCardProps> = ({ vehicle }) => {
             try {
                 const response = await api.get(`/users/${userId}/expeditions`);
                 const expeditionsData = response.data.expeditions || [];
-                console.log("Полученные экспедиции:", expeditionsData); // Выводим в консоль для отладки
+                console.log("Полученные экспедиции:", expeditionsData);
                 setExpeditions(expeditionsData);
                 setSelectedExpedition(expeditionsData.length > 0 ? String(expeditionsData[0].id) : null);
             } catch (error) {
