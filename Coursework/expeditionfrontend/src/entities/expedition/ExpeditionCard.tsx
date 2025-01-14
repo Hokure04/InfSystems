@@ -6,7 +6,7 @@ import ReportCard from '../report/ReportCard';
 import RequestCard from '../request/RequestCard';
 import PermitCard from '../permit/PermitCard';
 import SuppliesCard from '../supplies/SuppliesCard';
-import EquipmentCard from '../equipment/EquipmentCard';
+import EquipmentCardOld from '../equipment/EquipmentCardOld';
 import VehicleCardOld from '../vehicle/VehicleCardOld';
 import UserCard from '../user/UserCard';
 import YandexMapComponent from '../../map/YandexMapComponent';
@@ -142,7 +142,7 @@ const ExpeditionCard: React.FC<ExpeditionCardProps> = ({ expedition, onUpdateExp
                                     Equipment:
                                 </Typography>
                                 {expedition.equipmentList.map((equipment) => (
-                                    <EquipmentCard key={equipment.equipmentId} equipment={equipment} />
+                                    <EquipmentCardOld key={equipment.equipmentId} equipment={equipment} />
                                 ))}
                             </>
                         )}

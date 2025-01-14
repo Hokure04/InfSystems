@@ -58,12 +58,17 @@ public class EquipmentService {
         Equipment equipment = equipmentRepository.findById(equipmentId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Equipment not found"));
         Expedition expedition = expeditionRepository.findById(expeditionId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Expedition not found"));
 
-        if (!equipment.getExpeditionList().contains(expedition)) {
-            equipment.getExpeditionList().add(expedition);
-            equipmentRepository.save(equipment);
-            return true;
+        if (equipment.getReservation()) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Equipment is already reserved");
         }
-        return false;
+
+        if (!equipment.getExpeditionList().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Equipment is already assigned to another expedition");
+        }
+
+        equipment.getExpeditionList().add(expedition);
+        equipmentRepository.save(equipment);
+        return true;
     }
 
     public boolean removeEquipment(Long equipmentId, Long expeditionId) {

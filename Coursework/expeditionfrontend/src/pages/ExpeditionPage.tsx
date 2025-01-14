@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { CircularProgress, Box, Divider, Button } from '@mui/material';
-import ExpeditionCard from '../entities/expedition/ExpeditionCard.tsx';
-import { Expedition } from '../entities/expedition/Expedition.ts';
-import api from '../api.ts';
+import ExpeditionCard from '../entities/expedition/ExpeditionCard';
+import { Expedition } from '../entities/expedition/Expedition';
+import api from '../api';
 
 const ExpeditionPage: React.FC = () => {
     const [expeditions, setExpeditions] = useState<Expedition[]>([]);
@@ -126,3 +126,4 @@ const ExpeditionPage: React.FC = () => {
 };
 
 export default ExpeditionPage;
+
