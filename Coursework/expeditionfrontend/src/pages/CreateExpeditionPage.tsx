@@ -14,13 +14,15 @@ const CreateExpeditionPage: React.FC = () => {
 
     const handleSubmit = async () => {
         try {
+            console.log(routeGeoJson);
+            console.log(distance);
             await api.post("/expeditions", {
                 name,
                 startDate,
                 endDate,
                 description,
                 status,
-                route: routeGeoJson,
+                routeGeoJson,
                 distance,
             });
             alert("Expedition created successfully!");
@@ -28,6 +30,12 @@ const CreateExpeditionPage: React.FC = () => {
             console.error("Failed to create expedition:", error);
             alert("Error creating expedition. Please try again.");
         }
+    };
+    const handleRouteChange = (geoJson: any) => {
+        setRouteGeoJson(geoJson);
+    };
+    const handleDistanceChange = (geoJson: any) => {
+        setDistance(geoJson);
     };
 
     return (
@@ -89,8 +97,9 @@ const CreateExpeditionPage: React.FC = () => {
                 <YandexMapComponent
                     width="100%"
                     height="500px"
-                    onRouteExport={(geoJson: any) => setRouteGeoJson(geoJson)}
-                    onDistanceExport={(value: number) => setDistance(value)}
+                    onRouteExport={handleRouteChange}
+                    onDistanceExport={handleDistanceChange}
+                    options={true}
                 />
             </Box>
 
