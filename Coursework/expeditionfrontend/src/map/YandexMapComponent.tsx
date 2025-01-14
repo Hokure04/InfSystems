@@ -1,32 +1,43 @@
-import React, {useEffect, useState} from "react";
-import {YMaps, Map, Polyline, Placemark} from "@pbe/react-yandex-maps";
-import {Box, IconButton, Tooltip} from "@mui/material";
+import React, { useEffect, useState } from "react";
+import { YMaps, Map, Polyline, Placemark } from "@pbe/react-yandex-maps";
+import { Box, IconButton, Tooltip } from "@mui/material";
 import SettingsIcon from '@mui/icons-material/Settings';
 import DrawIcon from "@mui/icons-material/Brush";
 import SaveIcon from "@mui/icons-material/Save";
 import UploadIcon from "@mui/icons-material/CloudUpload";
-import {useNavigate} from "react-router-dom";
+import DeleteIcon from "@mui/icons-material/Delete";
+import CheckIcon from '@mui/icons-material/Check';
+
+import { useNavigate } from "react-router-dom";
 
 interface Route {
     coordinates: number[][];
 }
+
 interface YandexMapProps {
     width: string;
     height: string;
+    onRouteExport: (geoJson: any) => void; // Callback для передачи GeoJSON
+    onDistanceExport: (number: any) => void; // Callback
+    initialRoute?: any; // Начальный маршрут в формате GeoJSON
 }
 
-const YandexMapComponent: React.FC<YandexMapProps> = ({ width, height }) => {
+const YandexMapComponent: React.FC<YandexMapProps> = ({ width, height, onRouteExport, onDistanceExport, initialRoute }) => {
     const navigate = useNavigate();
-    const [route, setRoute] = useState<Route>({coordinates: []});
+    const [route, setRoute] = useState<Route>({ coordinates: [] });
     const [isDrawing, setIsDrawing] = useState(false);
     const [userLocation, setUserLocation] = useState<[number, number] | undefined>(undefined);
+    const mapRef = React.useRef<any>(null);
+    const [totalDistance, setTotalDistance] = useState<number>(0);
+
 
     // Получение текущего местоположения пользователя
     useEffect(() => {
+
         if ("geolocation" in navigator) {
             navigator.geolocation.getCurrentPosition(
                 (position) => {
-                    const {latitude, longitude} = position.coords;
+                    const { latitude, longitude } = position.coords;
                     setUserLocation([latitude, longitude]);
                 },
                 () => {
@@ -39,6 +50,17 @@ const YandexMapComponent: React.FC<YandexMapProps> = ({ width, height }) => {
         }
     }, []);
 
+    useEffect(() => {
+        if (initialRoute && initialRoute.geometry?.type === "LineString") {
+            setRoute({ coordinates: initialRoute.geometry.coordinates });
+        }
+    }, [initialRoute]);
+
+    useEffect(() => {
+        setTotalDistance(calculateDistance(route.coordinates));
+    }, [route.coordinates]);
+
+
     const handleMapClick = (e: any) => {
         if (!isDrawing) return;
 
@@ -46,7 +68,49 @@ const YandexMapComponent: React.FC<YandexMapProps> = ({ width, height }) => {
         setRoute((prevRoute) => ({
             coordinates: [...prevRoute.coordinates, coords],
         }));
+    };
 
+    const calculateDistance = (coordinates: number[][]): number => {
+        if (coordinates.length < 2) return 0;
+
+        const toRadians = (degrees: number) => (degrees * Math.PI) / 180;
+
+        const earthRadiusKm = 6371; // Радиус Земли в километрах
+
+        let total = 0;
+
+        for (let i = 1; i < coordinates.length; i++) {
+            const [lat1, lon1] = coordinates[i - 1];
+            const [lat2, lon2] = coordinates[i];
+
+            const dLat = toRadians(lat2 - lat1);
+            const dLon = toRadians(lon2 - lon1);
+
+            const a =
+                Math.sin(dLat / 2) ** 2 +
+                Math.cos(toRadians(lat1)) *
+                Math.cos(toRadians(lat2)) *
+                Math.sin(dLon / 2) ** 2;
+
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            total += earthRadiusKm * c; // Добавляем расстояние в километрах
+        }
+
+        return total * 1000; // Возвращаем расстояние в метрах
+    };
+
+    const handleMapRightClick = (e: any) => {
+        const clickCoords = e.get("coords");
+        const zoom = mapRef.current?.getZoom() || 9; // Получить текущий зум карты, fallback — 9
+        const threshold = 0.05 / Math.pow(2, zoom - 9);
+
+        setRoute((prevRoute) => ({
+            coordinates: prevRoute.coordinates.filter(
+                (point) =>
+                    Math.abs(point[0] - clickCoords[0]) > threshold ||
+                    Math.abs(point[1] - clickCoords[1]) > threshold
+            ),
+        }));
     };
 
     const saveGeoJSON = () => {
@@ -66,6 +130,7 @@ const YandexMapComponent: React.FC<YandexMapProps> = ({ width, height }) => {
         link.click();
     };
 
+
     const loadGeoJSON = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (!file) return;
@@ -74,11 +139,16 @@ const YandexMapComponent: React.FC<YandexMapProps> = ({ width, height }) => {
         reader.onload = (e) => {
             const geoJson = JSON.parse(e.target?.result as string);
             if (geoJson.geometry?.type === "LineString") {
-                setRoute({coordinates: geoJson.geometry.coordinates});
+                setRoute({ coordinates: geoJson.geometry.coordinates });
             }
         };
         reader.readAsText(file);
     };
+
+    const clearRoute = () => {
+        setRoute({ coordinates: [] });
+    };
+
     const handleOpenSettings = () => {
         navigate('/map-settings');
     };
@@ -89,68 +159,139 @@ const YandexMapComponent: React.FC<YandexMapProps> = ({ width, height }) => {
 
     return (
         userLocation && (
-
-            <div style={{
-                position: "relative", height: height, width: width,
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-            }}>
-                <Box position={"relative"} height={"100%"} width={"100%"} display={"flex"} flexDirection={"column"}
-                     alignItems={"center"}>
-                    <YMaps query={{
-                        apikey: "2bfb7c04-be84-48bc-a467-c68c888de2aa",
-                        lang: "ru_RU",
-                    }}>
+            <div
+                style={{
+                    position: "relative",
+                    height: height,
+                    width: width,
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                }}
+            >
+                <Box
+                    position={"relative"}
+                    height={"100%"}
+                    width={"100%"}
+                    display={"flex"}
+                    flexDirection={"column"}
+                    alignItems={"center"}
+                >
+                    <YMaps
+                        query={{
+                            apikey: "2bfb7c04-be84-48bc-a467-c68c888de2aa",
+                            lang: "ru_RU",
+                        }}
+                    >
                         <Map
                             defaultState={{
                                 center: userLocation,
                                 zoom: 9,
-                                type: (localStorage.getItem("mapType") as "yandex#map" | "yandex#satellite" | "yandex#hybrid") || "yandex#hybrid"
+                                type:
+                                    (localStorage.getItem("mapType") as
+                                        | "yandex#map"
+                                        | "yandex#satellite"
+                                        | "yandex#hybrid") || "yandex#hybrid",
                             }}
                             width="100%"
                             height="100%"
                             onClick={handleMapClick}
+                            onContextMenu={handleMapRightClick}
+                            instanceRef={(ref) => (mapRef.current = ref)}
+
                         >
+                            {totalDistance > 0 && (
+                            <Box
+                                position="absolute"
+                                top={0}
+
+                                zIndex={2}
+                                sx={{
+                                    backgroundColor: "rgb(60, 60, 60)",
+                                    padding: "5px 10px",
+                                    borderBottomRightRadius: "10px",
+                                    fontWeight: "bold",
+                                }}
+                            >
+                                Дистанция маршрута: {totalDistance >= 1000
+                                    ? `${(totalDistance / 1000).toFixed(2)} км`
+                                    : `${Math.round(totalDistance)} м`}
+                            </Box>
+                                )}
                             <Box
                                 position={"absolute"}
                                 right={0}
+                                top={0}
                                 zIndex={1}
                                 sx={{
                                     display: "flex",
                                     flexDirection: "column",
                                     alignItems: "center",
-
+                                    backgroundColor: "rgb(60, 60, 60)",
+                                    borderBottomLeftRadius: 10,
                                 }}
+
                             >
-                                <Tooltip title="Настройки" placement="left">
+                                <Tooltip title="Настройки" placement="left" >
+
                                     <IconButton color="primary" onClick={handleOpenSettings}>
-                                        <SettingsIcon/>
+                                        <SettingsIcon />
                                     </IconButton>
                                 </Tooltip>
-                                <Tooltip title={isDrawing ? "Завершить рисование" : "Рисовать маршрут"}
-                                         placement="left">
-                                    <IconButton
-                                        color={isDrawing ? "secondary" : "primary"}
-                                        onClick={() => setIsDrawing(!isDrawing)}
-                                    >
-                                        <DrawIcon/>
-                                    </IconButton>
-                                </Tooltip>
+
                                 <Tooltip title="Сохранить GeoJSON" placement="left">
                                     <IconButton color="primary" onClick={saveGeoJSON}>
-                                        <SaveIcon/>
+                                        <SaveIcon />
                                     </IconButton>
                                 </Tooltip>
                                 <Tooltip title="Загрузить GeoJSON" placement="left">
                                     <IconButton color="primary" component="label">
-                                        <UploadIcon/>
+                                        <UploadIcon />
                                         <input
                                             type="file"
                                             accept=".geojson"
                                             hidden
                                             onChange={loadGeoJSON}
                                         />
+                                    </IconButton>
+                                </Tooltip>
+                                <Tooltip
+                                    title={isDrawing ? "Завершить рисование" : "Рисовать маршрут"}
+                                    placement="left"
+                                >
+                                    <IconButton
+                                        color={isDrawing ? "success" : "primary"}
+                                        onClick={() => setIsDrawing(!isDrawing)}
+                                    >
+                                        <DrawIcon />
+                                    </IconButton>
+                                </Tooltip>
+
+                                <Tooltip title="Подтвердить маршрут" placement="left">
+                                    <IconButton
+
+                                        color={"primary"}
+                                        onClick={() => {
+                                            const geoJson = {
+                                                type: "Feature",
+                                                geometry: {
+                                                    type: "LineString",
+                                                    coordinates: route.coordinates,
+                                                },
+                                            };
+                                            onDistanceExport(totalDistance);
+                                            onRouteExport(geoJson); // Передаем GeoJSON в родительский компонент
+                                        }}
+                                        disabled={route.coordinates.length === 1 || route.coordinates.length === 0}
+                                    >
+                                        <CheckIcon />
+                                    </IconButton>
+                                </Tooltip>
+
+
+                                <Tooltip title="Очистить маршрут" placement="left">
+                                    <IconButton color="error" onClick={clearRoute}>
+                                        <DeleteIcon />
                                     </IconButton>
                                 </Tooltip>
                             </Box>
@@ -164,10 +305,9 @@ const YandexMapComponent: React.FC<YandexMapProps> = ({ width, height }) => {
                                 }}
                             />
                             {route.coordinates.map((point, index) => {
-                                // Устанавливаем стиль для начальной и конечной точек
-                                let iconPreset = "islands#blueDotIcon"; // Стандартная точка
-                                if (index === 0) iconPreset = "islands#redDotIcon"; // Начальная точка
-                                if (index === route.coordinates.length - 1) iconPreset = "islands#blueIcon"; // Конечная точка
+                                let iconPreset = "islands#blueDotIcon";
+                                if (index === 0) iconPreset = "islands#redDotIcon";
+                                if (index === route.coordinates.length - 1) iconPreset = "islands#blueIcon";
 
                                 return (
                                     <Placemark
@@ -182,7 +322,6 @@ const YandexMapComponent: React.FC<YandexMapProps> = ({ width, height }) => {
                         </Map>
                     </YMaps>
                 </Box>
-
             </div>
         )
     );
