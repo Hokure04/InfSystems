@@ -55,7 +55,8 @@ public class Expedition {
     @Column
     private String status;
 
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.PERSIST)
+//    @ManyToOne
     @JoinColumn(name = "route_id")
     private Route route;
 
@@ -68,17 +69,37 @@ public class Expedition {
     @OneToMany(mappedBy = "expedition", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Permit> permits;
 
-    @ManyToMany(mappedBy = "expeditionList")
+    @ManyToMany(cascade = CascadeType.ALL)
+    @JoinTable(
+            name = "expedition_supplies",
+            joinColumns = @JoinColumn(name = "expedition_id"),
+            inverseJoinColumns = @JoinColumn(name = "supply_id")
+    )
     private List<Supplies> supplyList;
 
-    @ManyToMany(mappedBy = "expeditionList")
+    @ManyToMany(cascade = CascadeType.ALL)
+    @JoinTable(
+            name = "expedition_equipment",
+            joinColumns = @JoinColumn(name = "expedition_id"),
+            inverseJoinColumns = @JoinColumn(name = "equipment_id")
+    )
     private List<Equipment> equipmentList;
 
-    @ManyToMany(mappedBy = "expeditionList")
+    @ManyToMany(cascade = CascadeType.ALL)
+    @JoinTable(
+            name = "expedition_vehicle",
+            joinColumns = @JoinColumn(name = "expedition_id"),
+            inverseJoinColumns = @JoinColumn(name = "vehicle_id")
+    )
     private List<Vehicle> vehicleList;
 
-    @ManyToMany(mappedBy = "expeditionList")
-    @JsonManagedReference
+    @ManyToMany(cascade = CascadeType.ALL)
+    @JoinTable(
+            name = "expedition_participant",
+            joinColumns = @JoinColumn(name = "expedition_id"),
+            inverseJoinColumns = @JoinColumn(name = "user_id")
+    )
+//    @JsonManagedReference
     private List<User> userList;
 
     //Map, который будет хранить пользователь желающих присоединиться к экспедиции и их статусы
