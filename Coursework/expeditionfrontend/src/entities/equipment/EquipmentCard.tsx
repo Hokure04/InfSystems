@@ -178,7 +178,7 @@ const EquipmentCard: React.FC<EquipmentProps> = ({equipment}) => {
                     onClick={handleRentEquipment}
                     disabled={loading || expeditions.length === 0}
                 >
-                    Арендовать транспорт для экспедиции
+                    Арендовать оборудование для экспедиции
                 </Button>
             </CardContent>
         </Card>

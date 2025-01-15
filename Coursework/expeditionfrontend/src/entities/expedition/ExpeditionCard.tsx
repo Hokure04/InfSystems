@@ -21,6 +21,7 @@ const ExpeditionCard: React.FC<ExpeditionCardProps> = ({ expedition, onUpdateExp
     const [loading, setLoading] = useState(false);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    const [showMore, setShowMore] = useState(false);
 
     const handleApply = async () => {
         setLoading(true);
@@ -77,155 +78,174 @@ const ExpeditionCard: React.FC<ExpeditionCardProps> = ({ expedition, onUpdateExp
                             </Typography>
                         )}
 
-                        {/* Информация о маршруте */}
-                        {expedition.route && (
-                            <>
-                                <Typography variant="subtitle1" style={{ marginTop: 16 }}>
-                                    Route:
-                                </Typography>
-                                <RouteCard route={expedition.route} />
-                            </>
-                        )}
-
-                        {/* Список отчетов */}
-                        {expedition.reports.length > 0 && (
-                            <>
-                                <Typography variant="subtitle1" style={{ marginTop: 16 }}>
-                                    Reports:
-                                </Typography>
-                                {expedition.reports.map((report) => (
-                                    <ReportCard key={report.reportId} report={report} />
-                                ))}
-                            </>
-                        )}
-
-                        {/* Запросы */}
-                        {expedition.requests.length > 0 && (
-                            <>
-                                <Typography variant="subtitle1" style={{ marginTop: 16 }}>
-                                    Requests:
-                                </Typography>
-                                {expedition.requests.map((request) => (
-                                    <RequestCard key={request.requestId} request={request} />
-                                ))}
-                            </>
-                        )}
-
-                        {/* Разрешения */}
-                        {expedition.permits.length > 0 && (
-                            <>
-                                <Typography variant="subtitle1" style={{ marginTop: 16 }}>
-                                    Permits:
-                                </Typography>
-                                {expedition.permits.map((permit) => (
-                                    <PermitCard key={permit.permitId} permit={permit} />
-                                ))}
-                            </>
-                        )}
-
-                        {/* Список снабжения */}
-                        {expedition.supplyList.length > 0 && (
-                            <>
-                                <Typography variant="subtitle1" style={{ marginTop: 16 }}>
-                                    Supplies:
-                                </Typography>
-                                {expedition.supplyList.map((supply) => (
-                                    <SuppliesCard key={supply.supplyId} supplies={supply} />
-                                ))}
-                            </>
-                        )}
-
-                        {/* Оборудование */}
-                        {expedition.equipmentList.length > 0 && (
-                            <>
-                                <Typography variant="subtitle1" style={{ marginTop: 16 }}>
-                                    Equipment:
-                                </Typography>
-                                {expedition.equipmentList.map((equipment) => (
-                                    <EquipmentCardOld key={equipment.equipmentId} equipment={equipment} />
-                                ))}
-                            </>
-                        )}
-
-                        {/* Транспорт */}
-                        {expedition.vehicleList.length > 0 && (
-                            <>
-                                <Typography variant="subtitle1" style={{ marginTop: 16 }}>
-                                    Vehicles:
-                                </Typography>
-                                {expedition.vehicleList.map((vehicle) => (
-                                    <VehicleCardOld key={vehicle.vehicleId} vehicle={vehicle} />
-                                ))}
-                            </>
-                        )}
-
-                        {/* Пользователи с уменьшенным размером текста */}
-                        {expedition.userList.length > 0 && (
-                            <>
-                                <Typography variant="subtitle1" style={{ marginTop: 16 }}>
-                                    Participants:
-                                </Typography>
-                                {expedition.userList.map((user) => (
-                                    // Уменьшаем размер текста для участников
-                                    <UserCard key={user.id} user={user} />
-                                ))}
-                            </>
-                        )}
-
-                        {/* Необходимые роли */}
-                        {expedition.requiredRoles.length > 0 && (
-                            <>
-                                <Typography variant="subtitle1" style={{ marginTop: 16 }}>
-                                    Required Roles:
-                                </Typography>
-                                <Grid container spacing={1}>
-                                    {expedition.requiredRoles.map((role, index) => (
-                                        <Grid item key={index}>
-                                            <Chip label={role} color="secondary" />
-                                        </Grid>
-                                    ))}
-                                </Grid>
-                            </>
-                        )}
-
-                        {/* Заявки пользователей */}
-                        {Object.keys(expedition.userApplications).length > 0 && (
-                            <>
-                                <Typography variant="subtitle1" style={{ marginTop: 16 }}>
-                                    User Applications:
-                                </Typography>
-                                <ul>
-                                    {Object.entries(expedition.userApplications).map(([userId, status]) => (
-                                        <li key={userId}>
-                                            User ID: {userId}, Status: {status}
-                                        </li>
-                                    ))}
-                                </ul>
-                            </>
-                        )}
-
-                        {/* Кнопка "Хочу участвовать" */}
+                        {/* Кнопка для показа дополнительной информации */}
                         <Button
                             variant="contained"
-                            color="primary"
-                            style={{ marginTop: 16 }}
-                            onClick={handleApply}
-                            disabled={loading}
+                            color="secondary"
+                            size="small"
+                            style={{ marginTop: 1 }}
+                            onClick={() => setShowMore(!showMore)}
                         >
-                            {loading ? 'Submitting...' : 'Хочу участвовать'}
+                            {showMore ? 'Показать меньше' : 'Показать больше'}
                         </Button>
 
-                        {successMessage && (
-                            <Typography variant="body2" color="success" style={{ marginTop: 8 }}>
-                                {successMessage}
-                            </Typography>
-                        )}
 
-                        {errorMessage && (
-                            <Typography variant="body2" color="error" style={{ marginTop: 8 }}>
-                                {errorMessage}
-                            </Typography>
+
+
+                        {/* Дополнительная информация о сущностях */}
+                        {showMore && (
+                            <>
+                                {/* Информация о маршруте */}
+                                {expedition.route && (
+                                    <>
+                                        <Typography variant="subtitle1" style={{ marginTop: 16 }}>
+                                            Route:
+                                        </Typography>
+                                        <RouteCard route={expedition.route} />
+                                    </>
+                                )}
+
+                                {/* Список отчетов */}
+                                {expedition.reports.length > 0 && (
+                                    <>
+                                        <Typography variant="subtitle1" style={{ marginTop: 16 }}>
+                                            Reports:
+                                        </Typography>
+                                        {expedition.reports.map((report) => (
+                                            <ReportCard key={report.reportId} report={report} />
+                                        ))}
+                                    </>
+                                )}
+
+                                {/* Запросы */}
+                                {expedition.requests.length > 0 && (
+                                    <>
+                                        <Typography variant="subtitle1" style={{ marginTop: 16 }}>
+                                            Requests:
+                                        </Typography>
+                                        {expedition.requests.map((request) => (
+                                            <RequestCard key={request.requestId} request={request} />
+                                        ))}
+                                    </>
+                                )}
+
+                                {/* Разрешения */}
+                                {expedition.permits.length > 0 && (
+                                    <>
+                                        <Typography variant="subtitle1" style={{ marginTop: 16 }}>
+                                            Permits:
+                                        </Typography>
+                                        {expedition.permits.map((permit) => (
+                                            <PermitCard key={permit.permitId} permit={permit} />
+                                        ))}
+                                    </>
+                                )}
+
+                                {/* Список снабжения */}
+                                {expedition.supplyList.length > 0 && (
+                                    <>
+                                        <Typography variant="subtitle1" style={{ marginTop: 16 }}>
+                                            Supplies:
+                                        </Typography>
+                                        {expedition.supplyList.map((supply) => (
+                                            <SuppliesCard key={supply.supplyId} supplies={supply} />
+                                        ))}
+                                    </>
+                                )}
+
+                                {/* Оборудование */}
+                                {expedition.equipmentList.length > 0 && (
+                                    <>
+                                        <Typography variant="subtitle1" style={{ marginTop: 16 }}>
+                                            Equipment:
+                                        </Typography>
+                                        {expedition.equipmentList.map((equipment) => (
+                                            <EquipmentCardOld key={equipment.equipmentId} equipment={equipment} />
+                                        ))}
+                                    </>
+                                )}
+
+                                {/* Транспорт */}
+                                {expedition.vehicleList.length > 0 && (
+                                    <>
+                                        <Typography variant="subtitle1" style={{ marginTop: 16 }}>
+                                            Vehicles:
+                                        </Typography>
+                                        {expedition.vehicleList.map((vehicle) => (
+                                            <VehicleCardOld key={vehicle.vehicleId} vehicle={vehicle} />
+                                        ))}
+                                    </>
+                                )}
+
+                                {/* Пользователи с уменьшенным размером текста */}
+                                {expedition.userList.length > 0 && (
+                                    <>
+                                        <Typography variant="subtitle1" style={{ marginTop: 16 }}>
+                                            Participants:
+                                        </Typography>
+                                        {expedition.userList.map((user) => (
+                                            <UserCard key={user.id} user={user} />
+                                        ))}
+                                    </>
+                                )}
+
+                                {/* Необходимые роли */}
+                                {expedition.requiredRoles.length > 0 && (
+                                    <>
+                                        <Typography variant="subtitle1" style={{ marginTop: 16 }}>
+                                            Required Roles:
+                                        </Typography>
+                                        <Grid container spacing={1}>
+                                            {expedition.requiredRoles.map((role, index) => (
+                                                <Grid item key={index}>
+                                                    <Chip label={role} color="secondary" />
+                                                </Grid>
+                                            ))}
+                                        </Grid>
+                                    </>
+                                )}
+
+                                {/* Заявки пользователей */}
+                                {Object.keys(expedition.userApplications).length > 0 && (
+                                    <>
+                                        <Typography variant="subtitle1" style={{ marginTop: 16 }}>
+                                            User Applications:
+                                        </Typography>
+                                        <ul>
+                                            {Object.entries(expedition.userApplications).map(([userId, status]) => (
+                                                <li key={userId}>
+                                                    User ID: {userId}, Status: {status}
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </>
+                                )}
+                            </>
                         )}
+                        <Grid>
+                            {/* Кнопка "Хочу участвовать" */}
+                            <Button
+                                variant="contained"
+                                color="primary"
+                                style={{ marginTop: 25 }}
+                                onClick={handleApply}
+                                disabled={loading}
+                            >
+                                {loading ? 'Submitting...' : 'Хочу участвовать'}
+                            </Button>
+
+                            {successMessage && (
+                                <Typography variant="body2" color="success" style={{ marginTop: 8 }}>
+                                    {successMessage}
+                                </Typography>
+                            )}
+
+                            {errorMessage && (
+                                <Typography variant="body2" color="error" style={{ marginTop: 8 }}>
+                                    {errorMessage}
+                                </Typography>
+                            )}
+                        </Grid>
                     </Grid>
 
                     {/* Карта в правом верхнем углу */}

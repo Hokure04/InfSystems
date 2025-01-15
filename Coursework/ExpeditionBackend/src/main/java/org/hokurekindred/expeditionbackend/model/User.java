@@ -81,7 +81,7 @@ public class User {
     private Set<Role> role;
 
     @ManyToMany
-    @JsonBackReference
+//    @JsonBackReference
     @JoinTable(name = "expedition_participant", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "expedition_id"))
     private List<Expedition> expeditionList;
 
