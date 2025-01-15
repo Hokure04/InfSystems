@@ -16,6 +16,7 @@ import ExpeditionPage from '../src/pages/ExpeditionPage.tsx';
 import RentPage from '../src/pages/RentPage.tsx'
 import CreateExpeditionPage from '../src/pages/CreateExpeditionPage.tsx'
 import CertificatePage from "./pages/CertificatePage.tsx";
+import UserProfile from "./user_profile/UserProfile.tsx";
 
 
 const theme = createTheme({
@@ -47,6 +48,8 @@ const App: React.FC = () => {
                         <Route path="/rent" element={<RentPage />} />
                         <Route path="/create" element={<CreateExpeditionPage />} />
                         <Route path="/certificate" element={<CertificatePage />} />
+                        <Route path="/user-profile" element={<UserProfile />} />
+
 
                         <Route path="*" element={<Navigate to="/" />} />
                     </Routes>
