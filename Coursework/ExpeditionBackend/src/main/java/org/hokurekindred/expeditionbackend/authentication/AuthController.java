@@ -8,6 +8,8 @@ import org.hokurekindred.expeditionbackend.model.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -67,6 +69,10 @@ public class AuthController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Map<String, String>> addAdministratorRole(@RequestParam("user") String username) {
         return authService.addAdministratorRole(username);
+    }
+    @PutMapping("/profile/set-pswd")
+    public ResponseEntity<Map<String, Object>> changePassword(@RequestBody String newPassword, @AuthenticationPrincipal UserDetails userDetails) {
+        return authService.changePassword(newPassword, userDetails.getUsername());
     }
 
     @GetMapping("/remove-administrator-role")

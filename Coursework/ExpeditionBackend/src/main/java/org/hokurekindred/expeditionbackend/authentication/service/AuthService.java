@@ -54,6 +54,15 @@ public class AuthService {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    public ResponseEntity<Map<String, Object>> changePassword(String newPassword, String username) {
+        Map<String, Object> successResponse = new HashMap<>();
+        User user = userRepository.findByUsername(username).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+        user.setPassword(newPassword);
+        userService.encodePasswordAndSaveUser(user);
+        successResponse.put("user", UserMapper.INSTANCE.toLoginResponse(user));
+        return new ResponseEntity<>(successResponse, HttpStatus.OK);
+    }
+
     public ResponseEntity<Map<String, String>> activateAccount(String token) {
         Map<String, String> response = new HashMap<>();
         jwtTokenProvider.validateActivationToken(token);
