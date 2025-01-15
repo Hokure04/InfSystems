@@ -55,7 +55,7 @@ const ExpeditionCard: React.FC<ExpeditionCardProps> = ({ expedition, onUpdateExp
     };
 
     return (
-        <Card variant="outlined" style={{ marginBottom: 16 }}>
+        <Card variant="elevation" style={{ marginBottom: 16 }}>
             <CardContent>
                 <Grid container spacing={2}>
                     {/* Основная информация о экспедиции */}

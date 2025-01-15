@@ -8,10 +8,13 @@ interface UserCardProps {
 
 const UserCard: React.FC<UserCardProps> = ({ user }) => {
     return (
-        <Card variant="outlined" style={{ marginBottom: 16 }}>
+        <Card variant="elevation" style={{ marginBottom: 16 }}>
             <CardContent>
-                <Typography variant="h6">
-                    {user.name} {user.surname} (Username: {user.username})
+                <Typography variant="h4">
+                    {user.username}
+                </Typography>
+                <Typography variant="body1">
+                    {user.name} {user.surname}
                 </Typography>
                 <Typography variant="body1">Email: {user.email}</Typography>
                 {user.phoneNumber && (

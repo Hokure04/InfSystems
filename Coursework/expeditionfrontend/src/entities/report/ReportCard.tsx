@@ -8,7 +8,7 @@ interface ReportCardProps {
 
 const ReportCard: React.FC<ReportCardProps> = ({ report }) => {
     return (
-        <Card variant="outlined" style={{ marginBottom: 16 }}>
+        <Card variant="elevation" style={{ marginBottom: 16 }}>
             <CardContent>
                 <Typography variant="h6" component="div">
                     Report ID: {report.reportId}

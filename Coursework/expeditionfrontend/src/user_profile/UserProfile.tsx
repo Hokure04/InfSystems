@@ -19,22 +19,12 @@ import {
 import InputMask from "react-input-mask";
 import api from "../api.ts";
 import AdminRequests from "./AdminRequest.tsx";
+import UserCard from "../entities/user/UserCard.tsx";
+import {User} from "../entities/user/User.ts";
 
-interface Role {
-    id: number;
-    name: string;
-}
 
-interface User {
-    id: number;
-    username: string;
-    email: string;
-    name: string;
-    surname: string;
-    phoneNumber: string;
-    aboutUser: string;
-    role: Role[];
-}
+
+
 
 const UserProfile: React.FC = () => {
     const [user, setUser] = useState<User | null>(null);
@@ -88,7 +78,7 @@ const UserProfile: React.FC = () => {
 
     const handleSaveChanges = async () => {
         if (editedUser) {
-            if (editedUser.phoneNumber.includes("_")) {
+            if (editedUser.phoneNumber?.includes("_")) {
                 setErrorPhoneMessage("Введите корректный номер телефона");
                 return;
             } else {
@@ -163,25 +153,7 @@ const UserProfile: React.FC = () => {
                 {/* Информация о пользователе */}
                 {user && (
                     <Box width="100%">
-                        <Typography variant="h5" align="center">{user.username}</Typography>
-
-                        <Typography variant="body1" mt={3}><strong>Имя:</strong> {user.name}</Typography>
-                        <Typography variant="body1"><strong>Фамилия:</strong> {user.surname}</Typography>
-                        <Typography variant="body1"><strong>Email:</strong> {user.email}</Typography>
-                        {user.phoneNumber && (
-                            <Typography variant="body1"><strong>Телефон:</strong> {user.phoneNumber}</Typography>)}
-                        {user.aboutUser && (
-                            <Typography variant="body1"><strong>О пользователе:</strong> {user.aboutUser}</Typography>)}
-                        {/* Отображение ролей */}
-
-                        <Typography variant="body1" mt={4}><strong>Роли:</strong></Typography>
-                        {user.role && (
-                            <ul>
-                                {user.role.map((r) => (
-                                    <li key={r.id}>{r.name}</li>
-                                ))}
-                            </ul>
-                        )}
+                        <UserCard user={user}  />
                         {user.role.length == 0 && (
                             <Typography variant="body1">Активируйте пользователя, для получения ролей! Для этого
                                 загляните в свой email, на него отправлено письмо с ссылкой на активацию.</Typography>

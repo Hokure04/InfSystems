@@ -20,6 +20,7 @@ import api from "../api";
 import {Inbox as InboxIcon} from "@mui/icons-material";
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
+import {User} from "../entities/user/User.ts"
 
 
 enum RequestStatus {
@@ -37,21 +38,7 @@ interface AdminRequest {
     status?: RequestStatus;
 }
 
-interface Role {
-    id: number;
-    name: string;
-}
 
-interface User {
-    id: number;
-    username: string;
-    email: string;
-    name: string;
-    surname: string;
-    phoneNumber: string;
-    aboutUser: string;
-    role: Role[];
-}
 
 const AdminRequests: React.FC<{ user: User }> = (user) => {
     const [isAdmin, setIsAdmin] = useState(false);

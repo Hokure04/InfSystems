@@ -8,7 +8,7 @@ interface RequestCardProps {
 
 const RequestCard: React.FC<RequestCardProps> = ({ request }) => {
     return (
-        <Card variant="outlined" style={{ marginBottom: 16 }}>
+        <Card variant="elevation" style={{ marginBottom: 16 }}>
             <CardContent>
                 <Typography variant="h6">Request #{request.requestId}</Typography>
                 <Typography variant="body1" style={{ marginTop: 8 }}>

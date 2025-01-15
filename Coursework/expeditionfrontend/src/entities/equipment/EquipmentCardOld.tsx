@@ -9,7 +9,7 @@ interface EquipmentProps {
 
 const EquipmentCard: React.FC<EquipmentProps> = ({equipment}) => {
     return (
-        <Card  sx={{margin: 2, padding: 2}}>
+        <Card  sx={{margin: 2, padding: 2}} variant="elevation">
             <CardContent>
                 <Typography variant="h5" component="div" gutterBottom>
                     {equipment.name}

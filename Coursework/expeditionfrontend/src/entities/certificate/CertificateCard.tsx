@@ -8,7 +8,7 @@ interface CertificateProps {
 
 const CertificateCard: React.FC<CertificateProps> = ({ certificate }) => {
     return (
-        <Card sx={{ margin: 2, padding: 2 }}>
+        <Card sx={{ margin: 2, padding: 2 }} variant="elevation">
             <CardContent>
                 <Typography variant="h5" component="div" gutterBottom>
                     {certificate.name}

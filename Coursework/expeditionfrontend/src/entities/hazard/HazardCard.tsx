@@ -9,7 +9,7 @@ interface HazardCardProps {
 
 const HazardCard: React.FC<HazardCardProps> = ({ hazard }) => {
     return (
-        <Card style={{ marginBottom: 16 }}>
+        <Card style={{ marginBottom: 16 }} variant="elevation">
             <CardContent>
                 <Typography variant="h6" component="div">
                     Hazard ID: {hazard.hazardId}

@@ -9,7 +9,7 @@ interface RouteCardProps {
 
 const RouteCard: React.FC<RouteCardProps> = ({ route }) => {
     return (
-        <Card variant="outlined" style={{ marginBottom: 16 }}>
+        <Card variant="elevation" style={{ marginBottom: 16 }}>
             <CardContent>
                 <Typography variant="h6" component="div">
                     Route ID: {route.routeId}
