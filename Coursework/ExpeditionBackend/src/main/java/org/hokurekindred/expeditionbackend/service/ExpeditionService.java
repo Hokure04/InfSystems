@@ -42,8 +42,13 @@ public class ExpeditionService {
     }
 
     public void saveExpedition(Expedition expedition) {
+        if (expedition.getRoute() != null && expedition.getRoute().getRouteId() == 0) {
+            Route savedRoute = routeRepository.save(expedition.getRoute());
+            expedition.setRoute(savedRoute);
+        }
         expeditionRepository.save(expedition);
     }
+
 
     public void deleteExpedition(Long id) {
         expeditionRepository.deleteById(id);
@@ -56,23 +61,24 @@ public class ExpeditionService {
         if (expeditionOptional.isPresent() && userInfoOptional.isPresent()) {
             Expedition expedition = expeditionOptional.get();
             User user = userInfoOptional.get();
-            String status = "pending";
-            if (status.equals(expedition.getUserApplications().get(userId))) {
-                if (!expedition.getUserList().contains(user)) {
-                    expedition.getUserList().add(user);
-                    user.getExpeditionList().add(expedition);
-                }
+
+            if (expedition.getUserList().isEmpty()) {
+                expedition.getUserList().add(user);
+                user.getExpeditionList().add(expedition);
                 expedition.getUserApplications().put(userId, "approved");
-                expeditionRepository.save(expedition);
-                return true;
-            } else if (!expedition.getUserApplications().containsKey(userId)) {
-                expedition.getUserApplications().put(userId, "pending");
-                expeditionRepository.save(expedition);
-                return true;
+            } else {
+                if (!expedition.getUserApplications().containsKey(userId)) {
+                    expedition.getUserApplications().put(userId, "pending");
+                }
             }
+            expeditionRepository.save(expedition);
+            userRepository.save(user);
+
+            return true;
         }
         return false;
     }
+
 
     public boolean assignAdmin(Long expeditionId, Long userId, Long adminId) {
         Optional<Expedition> expeditionOptional = expeditionRepository.findById(expeditionId);
@@ -149,6 +155,14 @@ public class ExpeditionService {
 
         return route;
     }
+
+    public Route createRouteFromExpedition(Route route) {
+        if (route.getRouteId() == 0) {
+            return routeRepository.save(route);
+        }
+        throw new IllegalArgumentException("Route already exists with ID: " + route.getRouteId());
+    }
+
 
     public Route updateRouteExpedition(Long expeditionId, Route routeChanged) {
         Expedition expedition = expeditionRepository.findById(expeditionId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Expedition not found"));

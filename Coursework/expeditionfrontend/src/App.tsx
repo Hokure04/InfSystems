@@ -14,9 +14,9 @@ import MapSettings from './map/MapSettings.tsx';
 import MapPage from './map/MapPage.tsx';
 import ExpeditionPage from '../src/pages/ExpeditionPage.tsx';
 import RentPage from '../src/pages/RentPage.tsx'
-import CreateExpeditionPage from '../src/pages/CreateExpeditionPage.tsx'
 import CertificatePage from "./pages/CertificatePage.tsx";
 import UserProfile from "./user_profile/UserProfile.tsx";
+import CreateExpeditionPage from "./pages/CreateExpeditionPage.tsx";
 
 
 const theme = createTheme({

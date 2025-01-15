@@ -78,9 +78,17 @@ public class ExpeditionController {
     @PostMapping
     public ResponseEntity<Map<String, Object>> createExpedition(@Valid @RequestBody Expedition expedition) {
         Map<String, Object> response = new HashMap<>();
+
+        if (expedition.getRoute() != null && expedition.getRoute().getRouteId() == 0) {
+            Route newRoute = expeditionService.createRouteFromExpedition(expedition.getRoute());
+            expedition.setRoute(newRoute);
+        }
+
         expeditionService.saveExpedition(expedition);
+        response.put("expedition", expedition);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
+
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Map<String, Object>> deleteExpedition(@PathVariable Long id) {

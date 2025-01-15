@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from "react";
+import React, { useEffect, useState } from "react";
 import { TextField, Button, Box } from "@mui/material";
 import api from "../api";
 import { Expedition } from "../entities/expedition/Expedition.ts";
@@ -14,7 +14,8 @@ import EquipmentForm from "./Equipment/EquipmentForm.tsx";
 import EquipmentList from "./Equipment/EquipmentList.tsx";
 import VehicleForm from "./Vehicle/VehicleForm.tsx";
 import VehicleList from "./Vehicle/VehicleList.tsx";
-import {Role} from "../entities/role/Role.ts";
+import { Role } from "../entities/role/Role.ts";
+import YandexMapComponent from "../map/YandexMapComponent.tsx";
 
 export interface User {
     id: number;
@@ -36,8 +37,8 @@ const CreateExpeditionPage: React.FC = () => {
     const [startDate, setStartDate] = useState("");
     const [endDate, setEndDate] = useState("");
     const [description, setDescription] = useState("");
-    const [route] = useState<Route | null>(null);
-    const [totalDistance] = useState<number>(0);
+    const [route, setRoute] = useState<Route | null>(null);
+    const [totalDistance, setTotalDistance] = useState<number>(0);
     const [suppliesList, setSuppliesList] = useState<any[]>([]);
     const [locationsList, setLocationsList] = useState<Location[]>([]);
     const [equipmentList, setEquipmentList] = useState<Equipment[]>([]);
@@ -48,87 +49,123 @@ const CreateExpeditionPage: React.FC = () => {
     const [isVehicleModalOpen, setIsVehicleModalOpen] = useState(false);
     const [currentUser, setCurrentUser] = useState<User | null>(null);
 
-    const handleAddSupply = (newSupply: { category: string; quantity: number; description: string }) => {
-        setSuppliesList([...suppliesList, newSupply]);
-    };
-
-    const handleAddLocation = (newLocation: Location) => {
-        setLocationsList([...locationsList, newLocation]);
-    };
-
-    const handleAddEquipment = (newEquipment: Equipment) => {
-        setEquipmentList([...equipmentList, newEquipment]);
-    };
-
-    const handleAddVehicle = (newVehicle: Vehicle) => {
-        setVehicleList([...vehicleList, newVehicle]);
-    };
-
     useEffect(() => {
         const userData = localStorage.getItem("user");
-        const password = localStorage.getItem("password");
-        if (userData && password) {
+        if (userData) {
             const parsedUser = JSON.parse(userData);
-            setCurrentUser({ ...parsedUser, password }); // Добавляем пароль в данные пользователя
+            setCurrentUser(parsedUser);
         }
     }, []);
 
+    const handleAddSupply = (newSupply: { category: string; quantity: number; description: string }) => {
+        setSuppliesList((prev) => [...prev, newSupply]);
+    };
+
+    const handleAddLocation = (newLocation: Location) => {
+        setLocationsList((prev) => [...prev, newLocation]);
+    };
+
+    const handleAddEquipment = (newEquipment: Equipment) => {
+        setEquipmentList((prev) => [...prev, newEquipment]);
+    };
+
+    const handleAddVehicle = (newVehicle: Vehicle) => {
+        setVehicleList((prev) => [...prev, newVehicle]);
+    };
+
+    const handleRouteExport = (geoJson: any) => {
+        const coordinates = geoJson.geometry.coordinates;
+        const routeData: Route = {
+            routeId: 0,
+            startPoint: JSON.stringify(coordinates),
+            endPoint: "SaintPetersburg",
+            distance: totalDistance,
+            locations: locationsList,
+        };
+        setRoute(routeData);
+    };
+
+    const handleDistanceExport = (distance: number) => {
+        setTotalDistance(distance);
+    };
+
     const handleSubmit = async () => {
-        if (!name || !startDate || !endDate || !description || !currentUser) {
-            alert("Please fill in all required fields!");
+        if (!name || !startDate || !endDate || !description || !currentUser || !route || totalDistance <= 0) {
+            alert("Please fill in all required fields correctly!");
             return;
         }
 
+        const expedition: Expedition = {
+            expeditionId: 0,
+            name,
+            startDate,
+            endDate,
+            description,
+            status: "start",
+            route,
+            reports: [],
+            requests: [],
+            permits: [],
+            supplyList: suppliesList,
+            equipmentList,
+            vehicleList,
+            userList: [],
+            userApplications: {},
+            requiredRoles: [],
+        };
+
         try {
-            const expedition: Expedition = {
-                expeditionId: 0,
-                name,
-                startDate,
-                endDate,
-                description: description || null,
-                status: "start",
-                route: route
-                    ? {
-                        ...route,
-                        distance: totalDistance,
-                    }
-                    : null,
-                reports: [],
-                requests: [],
-                permits: [],
-                supplyList: suppliesList,
-                equipmentList,
-                vehicleList,
-                userList: [currentUser],
-                userApplications: {},
-                requiredRoles: [],
-            };
+            const token = localStorage.getItem("token");
 
-            console.log("Expedition object before submission:", expedition);
+            if (!token) {
+                alert("Authorization token is missing. Please log in again.");
+                return;
+            }
 
-            await api.post("/expeditions", expedition);
+            const response = await api.post("/expeditions", expedition, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            console.log(response)
+
+            const expeditionsResponse = await api.get("/expeditions", {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            const expeditions = expeditionsResponse.data.expedition_list;
+            const lastExpedition = expeditions[expeditions.length - 1];
+
+            if (lastExpedition && currentUser) {
+                await api.post(`/expeditions/${lastExpedition.expeditionId}/add-user/${currentUser.id}`, null, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
+            }
+
             alert("Expedition created successfully and user added!");
-
         } catch (error) {
-            console.error("Failed to create expedition:", error);
-            alert("Error creating expedition. Please try again.");
+            console.error("Failed to create expedition or add user:", error);
+            alert("Error creating expedition or adding user. Please try again.");
         }
     };
 
-
     return (
         <Box sx={{ padding: 4 }}>
-            <h2>Создать экспедицию</h2>
+            <h2>Create Expedition</h2>
             <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2, maxWidth: "600px", marginBottom: 4 }}>
                 <TextField
-                    label="Название"
+                    label="Expedition Name"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     fullWidth
                     margin="normal"
                 />
                 <TextField
-                    label="Дата начала"
+                    label="Start Date"
                     type="date"
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
@@ -137,7 +174,7 @@ const CreateExpeditionPage: React.FC = () => {
                     InputLabelProps={{ shrink: true }}
                 />
                 <TextField
-                    label="Дата конца"
+                    label="End Date"
                     type="date"
                     value={endDate}
                     onChange={(e) => setEndDate(e.target.value)}
@@ -146,7 +183,7 @@ const CreateExpeditionPage: React.FC = () => {
                     InputLabelProps={{ shrink: true }}
                 />
                 <TextField
-                    label="Описание"
+                    label="Description"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     fullWidth
@@ -155,66 +192,41 @@ const CreateExpeditionPage: React.FC = () => {
                 />
             </Box>
 
-            {/* Supplies and Locations in parallel */}
-            <Box sx={{ display: "flex", justifyContent: "space-between", gap: 4, marginBottom: 4 }}>
+            <Box sx={{ display: "flex", gap: 4, marginBottom: 4 }}>
                 <Box sx={{ flex: 1 }}>
-                    <SuppliesList
-                        supplies={suppliesList}
-                        onAddSupply={() => setIsSuppliesModalOpen(true)}
-                    />
-                    <SuppliesForm
-                        open={isSuppliesModalOpen}
-                        onClose={() => setIsSuppliesModalOpen(false)}
-                        onAdd={handleAddSupply}
-                    />
+                    <SuppliesList supplies={suppliesList} onAddSupply={() => setIsSuppliesModalOpen(true)} />
+                    <SuppliesForm open={isSuppliesModalOpen} onClose={() => setIsSuppliesModalOpen(false)} onAdd={handleAddSupply} />
                 </Box>
                 <Box sx={{ flex: 1 }}>
-                    <LocationList
-                        locations={locationsList}
-                        onAddLocation={() => setIsLocationModalOpen(true)}
-                    />
-                    <LocationForm
-                        open={isLocationModalOpen}
-                        onClose={() => setIsLocationModalOpen(false)}
-                        onAdd={handleAddLocation}
-                    />
+                    <LocationList locations={locationsList} onAddLocation={() => setIsLocationModalOpen(true)} />
+                    <LocationForm open={isLocationModalOpen} onClose={() => setIsLocationModalOpen(false)} onAdd={handleAddLocation} />
                 </Box>
             </Box>
 
-            {/* Equipment and Vehicles in parallel */}
-            <Box sx={{ display: "flex", justifyContent: "space-between", gap: 4, marginBottom: 4 }}>
+            <Box sx={{ display: "flex", gap: 4, marginBottom: 4 }}>
                 <Box sx={{ flex: 1 }}>
-                    <EquipmentList
-                        equipment={equipmentList}
-                        onAddEquipment={() => setIsEquipmentModalOpen(true)}
-                    />
-                    <EquipmentForm
-                        open={isEquipmentModalOpen}
-                        onClose={() => setIsEquipmentModalOpen(false)}
-                        onAdd={handleAddEquipment}
-                    />
+                    <EquipmentList equipment={equipmentList} onAddEquipment={() => setIsEquipmentModalOpen(true)} />
+                    <EquipmentForm open={isEquipmentModalOpen} onClose={() => setIsEquipmentModalOpen(false)} onAdd={handleAddEquipment} />
                 </Box>
                 <Box sx={{ flex: 1 }}>
-                    <VehicleList
-                        vehicles={vehicleList}
-                        onAddVehicle={() => setIsVehicleModalOpen(true)}
-                    />
-                    <VehicleForm
-                        open={isVehicleModalOpen}
-                        onClose={() => setIsVehicleModalOpen(false)}
-                        onAdd={handleAddVehicle}
-                    />
+                    <VehicleList vehicles={vehicleList} onAddVehicle={() => setIsVehicleModalOpen(true)} />
+                    <VehicleForm open={isVehicleModalOpen} onClose={() => setIsVehicleModalOpen(false)} onAdd={handleAddVehicle} />
                 </Box>
             </Box>
 
-            {/* Submit Button */}
+            <Box sx={{ marginTop: 4 }}>
+                <h3>Map</h3>
+                <YandexMapComponent
+                    width="100%"
+                    height="500px"
+                    onRouteExport={handleRouteExport}
+                    onDistanceExport={handleDistanceExport}
+                    options={true}
+                />
+            </Box>
+
             <Box sx={{ textAlign: "center", marginTop: 4 }}>
-                <Button
-                    variant="contained"
-                    color="primary"
-                    onClick={handleSubmit}
-                    disabled={!name || !startDate || !endDate || !description}
-                >
+                <Button variant="contained" color="primary" onClick={handleSubmit}>
                     Create Expedition
                 </Button>
             </Box>
