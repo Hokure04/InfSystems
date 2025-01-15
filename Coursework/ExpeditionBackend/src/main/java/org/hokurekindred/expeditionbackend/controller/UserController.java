@@ -58,6 +58,8 @@ public class UserController {
     public ResponseEntity<Map<String, Object>> deleteProfile(@AuthenticationPrincipal UserDetails userDetails) {
         Map<String, Object> response = new HashMap<>();
         userRepository.delete(userRepository.findByUsername(userDetails.getUsername()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User with username: " + userDetails.getUsername() + " not found")));
+
+        adminRequestRepository.deleteAll(adminRequestRepository.findAllByUsername(userDetails.getUsername()));
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 

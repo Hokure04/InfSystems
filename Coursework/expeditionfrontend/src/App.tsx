@@ -48,7 +48,7 @@ const App: React.FC = () => {
                         <Route path="/rent" element={<RentPage />} />
                         <Route path="/create" element={<CreateExpeditionPage />} />
                         <Route path="/certificate" element={<CertificatePage />} />
-                        <Route path="/user-profile" element={<UserProfile />} />
+                        <Route path="/profile" element={<UserProfile />} />
 
 
                         <Route path="*" element={<Navigate to="/" />} />

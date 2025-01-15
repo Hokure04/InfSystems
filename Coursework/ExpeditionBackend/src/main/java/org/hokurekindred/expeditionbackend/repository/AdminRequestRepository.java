@@ -13,4 +13,5 @@ public interface AdminRequestRepository extends JpaRepository<AdminRequest, Long
     Optional<AdminRequest> findAdminRequestByUsernameAndStatus(String username, RequestStatus status);
     Optional<ArrayList<AdminRequest>> findAllByStatus(RequestStatus status);
     Optional<AdminRequest> findAdminRequestByUsernameAndStatusOrderByIdDesc(String username, RequestStatus status);
+    Iterable<AdminRequest> findAllByUsername(String username);
 }
