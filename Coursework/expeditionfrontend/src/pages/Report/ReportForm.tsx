@@ -16,13 +16,32 @@ interface ReportFormProps {
     onClose: () => void;
     expeditionId: string;
     supplyList: Supplies[];
-    onReportCreated: () => void; // Для обновления данных экспедиции после создания отчёта
+    onReportCreated: () => void;
 }
 
 const ReportForm: React.FC<ReportFormProps> = ({ open, onClose, expeditionId, supplyList, onReportCreated }) => {
     const [nomination, setNomination] = useState('');
     const [description, setDescription] = useState('');
     const [selectedSupplies, setSelectedSupplies] = useState<number[]>([]);
+
+    const fetchLastReportId = async (): Promise<number | null> => {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await api.get(`expeditions/${expeditionId}/reports`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            console.log(response);
+            const reports = response.data;
+            console.log(reports);
+            const lastReport = reports[reports.length - 1];
+            console.log(lastReport);
+            return lastReport.reportId;
+        } catch (error) {
+            console.error('Error fetching reports:', error);
+            return null;
+        }
+    };
+
 
     const createReport = async () => {
         try {
@@ -32,25 +51,52 @@ const ReportForm: React.FC<ReportFormProps> = ({ open, onClose, expeditionId, su
                 {
                     nomination,
                     description,
-                    suppliesList: selectedSupplies,
                 },
                 {
                     headers: { Authorization: `Bearer ${token}` },
                 }
             );
+
             console.log('Report created:', response.data);
+
+            const lastReportId = await fetchLastReportId();
+            if (lastReportId) {
+                for (const supplyId of selectedSupplies) {
+                    await linkSupplyToReport(lastReportId, supplyId);
+                }
+            }
+
             onReportCreated();
             onClose();
         } catch (error) {
-            console.error('Error creating report:', error);
+            console.error('Error creating report or linking supplies:', error);
         }
     };
+
+
 
     const handleSupplyToggle = (supplyId: number) => {
         setSelectedSupplies((prev) =>
             prev.includes(supplyId) ? prev.filter((id) => id !== supplyId) : [...prev, supplyId]
         );
     };
+
+    const linkSupplyToReport = async (reportId: number, supplyId: number) => {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await api.put(
+                `/expeditions/reports/${reportId}/supplies/${supplyId}`,
+                {},
+                {
+                    headers: { Authorization: `Bearer ${token}` },
+                }
+            );
+            console.log('Supply linked successfully:', response.data);
+        } catch (error) {
+            console.error('Error linking supply to report:', error);
+        }
+    };
+
 
     return (
         <Modal open={open} onClose={onClose}>

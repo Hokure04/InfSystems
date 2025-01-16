@@ -10,6 +10,7 @@ import RequestCard from '../entities/request/RequestCard.tsx';
 import api from '../api';
 import { Expedition } from '../entities/expedition/Expedition';
 import ReportForm from "./Report/ReportForm.tsx";
+import ReportCard from '../entities/report/ReportCard.tsx';
 
 const ExpeditionInfoPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
@@ -241,6 +242,20 @@ const ExpeditionInfoPage: React.FC = () => {
                                     </Typography>
                                 ))}
                             </Box>
+                        </>
+                    )}
+
+                    {/* Reports */}
+                    {expedition.reports?.length > 0 && (
+                        <>
+                            <Typography variant="h6" sx={{ marginBottom: 2, marginTop: 2 }}>
+                                Reports:
+                            </Typography>
+                            {expedition.reports.map((report) => (
+                                <Box key={report.reportId} sx={{ marginBottom: 1, transform: 'scale(0.9)', width: '100%' }}>
+                                    <ReportCard report={report} />
+                                </Box>
+                            ))}
                         </>
                     )}
 

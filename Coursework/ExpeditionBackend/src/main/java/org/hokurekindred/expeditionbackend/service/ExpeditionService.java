@@ -296,6 +296,10 @@ public class ExpeditionService {
         return locationRepository.save(location);
     }
 
+    public List<Report> getAllReports() {
+        return reportRepository.findAll();
+    }
+
     public Report linkSupplyToReport(Long reportId, Long supplyId) {
         Report report = reportRepository.findById(reportId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Report not found"));
         Supplies supply = suppliesRepository.findById(supplyId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Supply not found"));

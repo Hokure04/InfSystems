@@ -252,6 +252,11 @@ public class ExpeditionController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    @GetMapping("/{expeditionId}/reports")
+    public List<Report> getAllReports() {
+        return expeditionService.getAllReports();
+    }
+
     @PutMapping("/reports/{reportId}/supplies/{supplyId}")
     public ResponseEntity<Map<String, Object>> linkSupplyToReport(@PathVariable Long reportId, @PathVariable Long supplyId) {
         Map<String, Object> response = new HashMap<>();
