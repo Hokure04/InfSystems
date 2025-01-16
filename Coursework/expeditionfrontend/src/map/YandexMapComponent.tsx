@@ -1,6 +1,16 @@
 import React, {useEffect, useState} from "react";
 import {YMaps, Map, Polyline, Placemark} from "@pbe/react-yandex-maps";
-import {Box, IconButton, Snackbar, SnackbarContent, Tooltip, Typography} from "@mui/material";
+import {
+    Box, Button,
+    Dialog, DialogActions,
+    DialogContent,
+    DialogTitle,
+    IconButton,
+    Snackbar,
+    SnackbarContent, TextField,
+    Tooltip,
+    Typography
+} from "@mui/material";
 import SettingsIcon from '@mui/icons-material/Settings';
 import DrawIcon from "@mui/icons-material/Brush";
 import SaveIcon from "@mui/icons-material/Save";
@@ -9,29 +19,49 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import CheckIcon from '@mui/icons-material/Check';
 import ExploreIcon from '@mui/icons-material/Explore';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
+import {Location} from "../entities/location/Location.ts";
 
 import {useNavigate} from "react-router-dom";
+import {Hazard} from "../entities/hazard/Hazard.ts";
 
 interface Route {
     coordinates: number[][];
 }
 
+export interface LocalLocation {
+    locationName: string;
+    coordinates: number[];
+    permitType: string;
+    hardLevel: number;
+    overallRating: number;
+}
+
+interface expRoute {
+    geoJson: any;
+    distance: number;
+    location: Location[];
+}
+
 interface YandexMapProps {
     width: string;
     height: string;
-    onRouteExport?: (geoJson: any) => void; // Callback для передачи GeoJSON
-    onDistanceExport?: (number: any) => void; // Callback
+    onRouteExport?: (expRoute: expRoute) => void; // Callback для передачи GeoJSON
+    //onDistanceExport?: (number: any) => void; // Callback
     initialRoute?: any; // Начальный маршрут в формате GeoJSON
     options?: boolean;
+    initialLocation?: any;
+    //locationsExport?: (Location: any) => void;
 }
 
 const YandexMapComponent: React.FC<YandexMapProps> = ({
                                                           width,
                                                           height,
                                                           onRouteExport,
-                                                          onDistanceExport,
+                                                          //onDistanceExport,
                                                           initialRoute,
-                                                          options
+                                                          options,
+                                                          initialLocation,
+    //locationsExport,
                                                       }) => {
     const navigate = useNavigate();
     const [route, setRoute] = useState<Route>({coordinates: []});
@@ -41,35 +71,95 @@ const YandexMapComponent: React.FC<YandexMapProps> = ({
     const [totalDistance, setTotalDistance] = useState<number>(0);
     const [errorMessage, setErrorMessage] = useState<string | null>(null); // Состояние для ошибки
     const [errorInitMessage, setErrorInitMessage] = useState<string | null>(null); // Состояние для ошибки
+    const [locations, setLocations] = useState<LocalLocation[]>([]);
+    const [dialogOpen, setDialogOpen] = useState(false);
+    const [newLocation, setNewLocation] = useState<LocalLocation | null>(null);
+
+
+    const handlePlacemarkClick = (coords: number[]) => {
+        if (!isDrawing) {
+            return;
+        }
+        const defaultLocation: LocalLocation = {
+            locationName: "",
+            coordinates: coords,
+            permitType: "",
+            hardLevel: 0,
+            overallRating: 0,
+        };
+        setNewLocation(defaultLocation);
+        setDialogOpen(true);
+    };
+
+    function convertLocalLocationsToLocations(
+        localLocations: LocalLocation[],
+        hazards: Hazard[] = []
+    ): Location[] {
+        return localLocations.map((localLocation) => {
+            let [latitude, longitude] = localLocation.coordinates;
+            latitude = parseFloat(latitude.toFixed(9));
+            longitude = parseFloat(longitude.toFixed(9));
+
+            return {
+                locationId: 0, // Пустой ID
+                locationName: localLocation.locationName,
+                latitude,
+                longitude,
+                permitType: localLocation.permitType,
+                hardLevel: localLocation.hardLevel,
+                overallRating: localLocation.overallRating,
+                hazards, // Один и тот же массив hazards
+            };
+        });
+    }
+
+
+    const handleDialogClose = () => {
+        setDialogOpen(false);
+        setNewLocation(null);
+    };
+
+    const handleDialogSave = () => {
+        if (newLocation) {
+            setLocations((prevLocations) => [...prevLocations, newLocation]);
+            handleDialogClose();
+        }
+    };
+
+    const handleInputChange = (field: keyof LocalLocation, value: string | number) => {
+        if (newLocation) {
+            setNewLocation({...newLocation, [field]: value});
+        }
+    };
 
 
 
     useEffect(() => {
-            if (initialRoute) {
-                try {
-                    const geoJson = JSON.parse(initialRoute as string);
-                    // Проверяем, что GeoJSON является массивом объектов с типом "Feature"
-                    if (Array.isArray(geoJson) && geoJson[0].geometry?.type === "MultiLineString") {
-                        // Извлекаем координаты из всех MultiLineString
-                        const allCoordinates = geoJson.flatMap(feature => feature.geometry.coordinates.flat());
-                        setRoute({coordinates: allCoordinates});
-                        zoomToRoute(allCoordinates);
-                    }
-                    // Проверка для типа "LineString"
-                    else if (geoJson.geometry?.type === "LineString") {
-                        setRoute({coordinates: geoJson.geometry.coordinates});
-                        zoomToRoute(geoJson.geometry.coordinates);
-                    } else {
-                        setErrorInitMessage("Неверный тип геометрии в GeoJSON");
-                    }
-                } catch (error) {
-                    // Ошибка при чтении или парсинге
-                    setErrorInitMessage("Ошибка при загрузке маршрута: " + error);
+        if (initialRoute) {
+            try {
+                const geoJson = JSON.parse(initialRoute as string);
+                // Проверяем, что GeoJSON является массивом объектов с типом "Feature"
+                if (Array.isArray(geoJson) && geoJson[0].geometry?.type === "MultiLineString") {
+                    // Извлекаем координаты из всех MultiLineString
+                    const allCoordinates = geoJson.flatMap(feature => feature.geometry.coordinates.flat());
+                    setRoute({coordinates: allCoordinates});
+                    zoomToRoute(allCoordinates);
                 }
+                // Проверка для типа "LineString"
+                else if (geoJson.geometry?.type === "LineString") {
+                    setRoute({coordinates: geoJson.geometry.coordinates});
+                    zoomToRoute(geoJson.geometry.coordinates);
+                } else {
+                    setErrorInitMessage("Неверный тип геометрии в GeoJSON");
+                }
+            } catch (error) {
+                // Ошибка при чтении или парсинге
+                setErrorInitMessage("Ошибка при загрузке маршрута: " + error);
             }
+        }
 
-            // Рассчитываем центр маршрута и зум
-         else {
+        // Рассчитываем центр маршрута и зум
+        else {
             if ("geolocation" in navigator) {
                 navigator.geolocation.getCurrentPosition(
                     (position) => {
@@ -84,6 +174,9 @@ const YandexMapComponent: React.FC<YandexMapProps> = ({
                 );
 
             }
+        }
+        if (initialLocation) {
+            setLocations(initialLocation);
         }
     }, [initialRoute]);
 
@@ -126,6 +219,7 @@ const YandexMapComponent: React.FC<YandexMapProps> = ({
 
     useEffect(() => {
         setTotalDistance(calculateDistance(route.coordinates));
+
     }, [route.coordinates]);
 
 
@@ -263,9 +357,9 @@ const YandexMapComponent: React.FC<YandexMapProps> = ({
                 textAlign: "center",
             }}
         >
-            <WarningAmberIcon sx={{ color: "red", mb: 1, scale: 5, marginBottom: 10 }} />
+            <WarningAmberIcon sx={{color: "red", mb: 1, scale: 5, marginBottom: 10}}/>
 
-            <Typography variant="h6" sx={{ mb: 1 }}>
+            <Typography variant="h6" sx={{mb: 1}}>
                 Не удалось отрисовать маршрут
             </Typography>
             <Typography variant="body2">
@@ -405,7 +499,7 @@ const YandexMapComponent: React.FC<YandexMapProps> = ({
                                 )}
 
 
-                                {(onDistanceExport || onRouteExport) && options && (
+                                {(onRouteExport) && options && (
                                     <Tooltip title="Подтвердить маршрут" placement="left">
                                         <IconButton
 
@@ -418,13 +512,17 @@ const YandexMapComponent: React.FC<YandexMapProps> = ({
                                                         coordinates: route.coordinates,
                                                     },
                                                 };
-                                                if (onDistanceExport) {
-
-                                                    onDistanceExport(totalDistance);
-                                                }
+                                                // if (onDistanceExport) {
+                                                //
+                                                //     onDistanceExport(totalDistance);
+                                                // }
                                                 if (onRouteExport) {
-                                                    onRouteExport(geoJson); // Передаем GeoJSON в родительский компонент
+                                                    const exp: expRoute = {geoJson: geoJson, distance: totalDistance, location: convertLocalLocationsToLocations(locations)}
+                                                    onRouteExport(exp); // Передаем GeoJSON в родительский компонент
                                                 }
+                                                // if (locationsExport) {
+                                                //     convertLocalLocationsToLocations(locations)
+                                                // }
                                             }}
                                             disabled={route.coordinates.length === 1 || route.coordinates.length === 0}
                                         >
@@ -464,12 +562,76 @@ const YandexMapComponent: React.FC<YandexMapProps> = ({
                                         options={{
                                             preset: iconPreset,
                                         }}
+                                        onClick={() => handlePlacemarkClick(point)}
                                     />
                                 );
                             })}
+                            {locations.map((location, index) => (
+                                <Placemark
+                                    key={`location-${index}`}
+                                    geometry={location.coordinates}
+                                    options={{
+                                        preset: "islands#greenDotIcon", // Зелёный флаг для локаций
+                                    }}
+                                    properties={{
+                                        balloonContent: `<b>${location.locationName}</b><br>
+                                Permit Type: ${location.permitType}<br>
+                                Hard Level: ${location.hardLevel}<br>
+                                Overall Rating: ${location.overallRating}`,
+                                    }}
+                                    modules={["geoObject.addon.balloon"]} // Включение отображения балуна
+                                />
+                            ))}
                         </Map>
                     </YMaps>
                 </Box>
+                {/* Диалоговое окно */}
+                <Dialog open={dialogOpen} onClose={handleDialogClose}>
+                    <DialogTitle>Заполните информацию о локации</DialogTitle>
+                    <DialogContent>
+                        <Box display="flex" flexDirection="column" gap={2}>
+                            <TextField
+                                label="Название локации"
+                                value={newLocation?.locationName || ""}
+                                onChange={(e) =>
+                                    handleInputChange("locationName", e.target.value)
+                                }
+                                fullWidth
+                            />
+                            <TextField
+                                label="Тип доступа"
+                                value={newLocation?.permitType || ""}
+                                onChange={(e) => handleInputChange("permitType", e.target.value)}
+                                fullWidth
+                            />
+                            <TextField
+                                label="Уровень сложности"
+                                type="number"
+                                value={newLocation?.hardLevel || 0}
+                                onChange={(e) =>
+                                    handleInputChange("hardLevel", Number(e.target.value))
+                                }
+                                fullWidth
+                            />
+                            <TextField
+                                label="Общая оценка"
+                                type="number"
+                                value={newLocation?.overallRating || 0}
+                                onChange={(e) =>
+                                    handleInputChange("overallRating", Number(e.target.value))
+                                }
+                                fullWidth
+                            />
+                        </Box>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={handleDialogClose}>Отмена</Button>
+                        <Button onClick={handleDialogSave} variant="contained">
+                            Сохранить
+                        </Button>
+                    </DialogActions>
+                </Dialog>
+
                 {/* Snackbar для отображения ошибки */}
                 <Snackbar
                     open={!!errorMessage} // Показываем Snackbar, если ошибка есть

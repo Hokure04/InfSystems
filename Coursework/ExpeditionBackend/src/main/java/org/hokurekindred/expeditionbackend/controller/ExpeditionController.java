@@ -79,10 +79,14 @@ public class ExpeditionController {
     public ResponseEntity<Map<String, Object>> createExpedition(@Valid @RequestBody Expedition expedition) {
         Map<String, Object> response = new HashMap<>();
 
+        System.out.println(expedition);
+
         if (expedition.getRoute() != null && expedition.getRoute().getRouteId() == 0) {
             Route newRoute = expeditionService.createRouteFromExpedition(expedition.getRoute());
+            System.out.println(newRoute);
             expedition.setRoute(newRoute);
         }
+
 
         expeditionService.saveExpedition(expedition);
         response.put("expedition", expedition);
