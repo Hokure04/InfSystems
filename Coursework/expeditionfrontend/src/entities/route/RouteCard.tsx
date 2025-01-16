@@ -14,12 +14,12 @@ const RouteCard: React.FC<RouteCardProps> = ({ route }) => {
                 <Typography variant="h6" component="div">
                     Route ID: {route.routeId}
                 </Typography>
-                <Typography variant="body1" style={{ marginTop: 8 }}>
-                    Start Point: {route.startPoint}
-                </Typography>
-                <Typography variant="body1" style={{ marginTop: 8 }}>
-                    End Point: {route.endPoint}
-                </Typography>
+                {/*<Typography variant="body1" style={{ marginTop: 8 }}>*/}
+                {/*    Start Point: {route.startPoint}*/}
+                {/*</Typography>*/}
+                {/*<Typography variant="body1" style={{ marginTop: 8 }}>*/}
+                {/*    End Point: {route.endPoint}*/}
+                {/*</Typography>*/}
                 <Typography variant="body1" style={{ marginTop: 8 }}>
                     Distance: {route.distance.toFixed(2)} km
                 </Typography>
