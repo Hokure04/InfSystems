@@ -48,7 +48,9 @@ public class ExpeditionService {
             Route savedRoute = routeRepository.save(expedition.getRoute());
             expedition.setRoute(savedRoute);
         }
+
         expeditionRepository.save(expedition);
+
     }
 
 
@@ -182,6 +184,7 @@ public class ExpeditionService {
 
     public Route createRouteFromExpedition(Route route) {
         if (route.getRouteId() == 0) {
+            System.out.println(route);
             return routeRepository.save(route);
         }
         throw new IllegalArgumentException("Route already exists with ID: " + route.getRouteId());

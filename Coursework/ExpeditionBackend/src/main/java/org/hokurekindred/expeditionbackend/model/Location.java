@@ -30,11 +30,13 @@ public class Location {
     @Size(min = 3, max = 100, message = "Location name must be between 3 and 100 characters")
     private String locationName;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     @NotNull(message = "Coordinates cannot be null")
-    @Pattern(regexp = "^-?\\d{1,2}(\\.\\d{1,6})?,\\s?-?\\d{1,3}(\\.\\d{1,6})?$",
-            message = "Invalid coordinates format. Expected format: latitude, longitude")
-    private String coordinates;
+    private Double latitude;
+
+    @Column(nullable = false)
+    @NotNull(message = "Coordinates cannot be null")
+    private Double longitude;
 
     @Column(name = "permit_type", nullable = false)
     @NotNull(message = "Permit type cannot be null")
@@ -53,7 +55,7 @@ public class Location {
 
     @ManyToOne
     @JoinColumn(name = "route_id", nullable = false)
-    @NotNull(message = "Route cannot be null")
+    //@NotNull(message = "Route cannot be null")
     private Route route;
 
     @OneToMany(mappedBy = "location", cascade = CascadeType.ALL, orphanRemoval = true)

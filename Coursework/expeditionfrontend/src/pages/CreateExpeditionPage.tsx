@@ -8,8 +8,6 @@ import { Equipment } from "../entities/equipment/Equipment.ts";
 import { Vehicle } from "../entities/vehicle/Vehicle.ts";
 import SuppliesForm from "./Supplies/SuppliesForm.tsx";
 import SuppliesList from "./Supplies/SuppliesList.tsx";
-import LocationForm from "./Locations/LocationForm.tsx";
-import LocationList from "./Locations/LocationList.tsx";
 import EquipmentForm from "./Equipment/EquipmentForm.tsx";
 import EquipmentList from "./Equipment/EquipmentList.tsx";
 import VehicleForm from "./Vehicle/VehicleForm.tsx";
@@ -32,19 +30,24 @@ export interface User {
     password: string;
 }
 
+interface expRoute {
+    geoJson: any;
+    distance: number;
+    location: Location[];
+}
+
 const CreateExpeditionPage: React.FC = () => {
     const [name, setName] = useState("");
     const [startDate, setStartDate] = useState("");
     const [endDate, setEndDate] = useState("");
     const [description, setDescription] = useState("");
     const [route, setRoute] = useState<Route | null>(null);
-    const [totalDistance, setTotalDistance] = useState<number>(0);
+    // const [totalDistance, setTotalDistance] = useState<number>(0);
     const [suppliesList, setSuppliesList] = useState<any[]>([]);
-    const [locationsList, setLocationsList] = useState<Location[]>([]);
+    // const [locationsList, setLocationsList] = useState<Location[]>([]);
     const [equipmentList, setEquipmentList] = useState<Equipment[]>([]);
     const [vehicleList, setVehicleList] = useState<Vehicle[]>([]);
     const [isSuppliesModalOpen, setIsSuppliesModalOpen] = useState(false);
-    const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
     const [isEquipmentModalOpen, setIsEquipmentModalOpen] = useState(false);
     const [isVehicleModalOpen, setIsVehicleModalOpen] = useState(false);
     const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -61,10 +64,6 @@ const CreateExpeditionPage: React.FC = () => {
         setSuppliesList((prev) => [...prev, newSupply]);
     };
 
-    const handleAddLocation = (newLocation: Location) => {
-        setLocationsList((prev) => [...prev, newLocation]);
-    };
-
     const handleAddEquipment = (newEquipment: Equipment) => {
         setEquipmentList((prev) => [...prev, newEquipment]);
     };
@@ -73,23 +72,28 @@ const CreateExpeditionPage: React.FC = () => {
         setVehicleList((prev) => [...prev, newVehicle]);
     };
 
-    const handleRouteExport = (geoJson: any) => {
+    const handleRouteExport = (expRoute: expRoute) => {
         const routeData: Route = {
             routeId: 0,
-            startPoint: JSON.stringify(geoJson),
+            startPoint: JSON.stringify(expRoute.geoJson),
             endPoint: "SaintPetersburg",
-            distance: totalDistance,
-            locations: locationsList,
+            distance: expRoute.distance,
+            locations: [],
         };
         setRoute(routeData);
     };
 
-    const handleDistanceExport = (distance: number) => {
-        setTotalDistance(distance);
-    };
+    // const handleDistanceExport = (distance: number) => {
+    //     setTotalDistance(distance);
+    // };
+    //
+    // const handleLocationExport = (location: any) => {
+    //     console.log(location);
+    //     setLocationsList(location);
+    // };
 
     const handleSubmit = async () => {
-        if (!name || !startDate || !endDate || !description || !currentUser || !route || totalDistance <= 0) {
+        if (!name || !startDate || !endDate || !description || !currentUser || !route ) {
             alert("Please fill in all required fields correctly!");
             return;
         }
@@ -111,6 +115,7 @@ const CreateExpeditionPage: React.FC = () => {
             userList: [],
             userApplications: {},
             requiredRoles: [],
+
         };
 
         try {
@@ -191,21 +196,15 @@ const CreateExpeditionPage: React.FC = () => {
                 />
             </Box>
 
-            <Box sx={{ display: "flex", gap: 4, marginBottom: 4 }}>
-                <Box sx={{ flex: 1 }}>
-                    <SuppliesList supplies={suppliesList} onAddSupply={() => setIsSuppliesModalOpen(true)} />
-                    <SuppliesForm open={isSuppliesModalOpen} onClose={() => setIsSuppliesModalOpen(false)} onAdd={handleAddSupply} />
-                </Box>
-                <Box sx={{ flex: 1 }}>
-                    <LocationList locations={locationsList} onAddLocation={() => setIsLocationModalOpen(true)} />
-                    <LocationForm open={isLocationModalOpen} onClose={() => setIsLocationModalOpen(false)} onAdd={handleAddLocation} />
-                </Box>
-            </Box>
 
             <Box sx={{ display: "flex", gap: 4, marginBottom: 4 }}>
                 <Box sx={{ flex: 1 }}>
                     <EquipmentList equipment={equipmentList} onAddEquipment={() => setIsEquipmentModalOpen(true)} />
                     <EquipmentForm open={isEquipmentModalOpen} onClose={() => setIsEquipmentModalOpen(false)} onAdd={handleAddEquipment} />
+                </Box>
+                <Box sx={{ flex: 1 }}>
+                    <SuppliesList supplies={suppliesList} onAddSupply={() => setIsSuppliesModalOpen(true)} />
+                    <SuppliesForm open={isSuppliesModalOpen} onClose={() => setIsSuppliesModalOpen(false)} onAdd={handleAddSupply} />
                 </Box>
                 <Box sx={{ flex: 1 }}>
                     <VehicleList vehicles={vehicleList} onAddVehicle={() => setIsVehicleModalOpen(true)} />
@@ -218,8 +217,10 @@ const CreateExpeditionPage: React.FC = () => {
                 <YandexMapComponent
                     width="100%"
                     height="500px"
+                    // onDistanceExport={handleDistanceExport}
+                    // locationsExport={handleLocationExport}
                     onRouteExport={handleRouteExport}
-                    onDistanceExport={handleDistanceExport}
+
                     options={true}
                 />
             </Box>
