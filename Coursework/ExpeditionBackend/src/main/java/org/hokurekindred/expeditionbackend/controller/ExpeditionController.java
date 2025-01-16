@@ -299,6 +299,26 @@ public class ExpeditionController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    @PostMapping("/{expeditionId}/reports")
+    public ResponseEntity<Map<String, Object>> createReport(
+            @PathVariable Long expeditionId,
+            @RequestBody Map<String, Object> reportData) {
+        try {
+            String nomination = (String) reportData.get("nomination");
+            String description = (String) reportData.get("description");
+            List<Long> suppliesList = (List<Long>) reportData.get("suppliesList");
+
+            Report createdReport = expeditionService.createReport(expeditionId, nomination, description, suppliesList);
+            Map<String, Object> response = new HashMap<>();
+            response.put("message", "Report created successfully");
+            response.put("report", createdReport);
+            return new ResponseEntity<>(response, HttpStatus.CREATED);
+        } catch (Exception e) {
+            return new ResponseEntity<>(Map.of("error", e.getMessage()), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+
     @PostMapping("/{expeditionId}/check-permits")
     public ResponseEntity<Map<String, Object>> checkNecessaryPermits(@PathVariable Long expeditionId, @RequestBody List<String> requiredPermit) {
         Map<String, Object> response = new HashMap<>();

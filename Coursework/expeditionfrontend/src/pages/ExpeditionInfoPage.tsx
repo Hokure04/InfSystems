@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { Box, CircularProgress, Typography, Grid } from '@mui/material';
+import {Box, CircularProgress, Typography, Grid, Button} from '@mui/material';
 import YandexMapComponent from '../map/YandexMapComponent';
 import SuppliesCard from '../entities/supplies/SuppliesCard';
 import EquipmentCardOld from '../entities/equipment/EquipmentCardOld';
@@ -9,11 +9,13 @@ import UserCard from '../entities/user/UserCard';
 import RequestCard from '../entities/request/RequestCard.tsx';
 import api from '../api';
 import { Expedition } from '../entities/expedition/Expedition';
+import ReportForm from "./Report/ReportForm.tsx";
 
 const ExpeditionInfoPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const [expedition, setExpedition] = useState<Expedition | null>(null);
     const [loading, setLoading] = useState(true);
+    const [openReportForm, setOpenReportForm] = useState(false);
 
     useEffect(() => {
         const fetchExpeditionDetails = async () => {
@@ -39,7 +41,7 @@ const ExpeditionInfoPage: React.FC = () => {
                     Authorization: `Bearer ${token}`,
                 },
             });
-            return response.data.user.id; // Убедитесь, что в ответе возвращается ID пользователя
+            return response.data.user.id;
         } catch (error) {
             console.error('Failed to fetch user ID:', error);
             return null;
@@ -98,6 +100,14 @@ const ExpeditionInfoPage: React.FC = () => {
         }
     };
 
+    const refreshExpeditionData = async () => {
+        try {
+            const response = await api.get(`/expeditions/${id}`);
+            setExpedition(response.data.expedition);
+        } catch (error) {
+            console.error('Error refreshing expedition data:', error);
+        }
+    };
 
     if (loading) {
         return (
@@ -233,6 +243,22 @@ const ExpeditionInfoPage: React.FC = () => {
                             </Box>
                         </>
                     )}
+
+                    <Box sx={{ padding: 3 }}>
+                        {/* Кнопка для открытия модального окна */}
+                        <Button variant="contained" color="primary" onClick={() => setOpenReportForm(true)}>
+                            Add Report
+                        </Button>
+
+                        {/* Модальное окно */}
+                        <ReportForm
+                            open={openReportForm}
+                            onClose={() => setOpenReportForm(false)}
+                            expeditionId={id!}
+                            supplyList={expedition?.supplyList || []}
+                            onReportCreated={refreshExpeditionData}
+                        />
+                    </Box>
                 </Grid>
 
                 {/* Правая часть: карта */}

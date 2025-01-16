@@ -150,7 +150,6 @@ public class ExpeditionService {
         return false;
     }
 
-
     public boolean rejectUserApplication(Long expeditionId, Long userId) {
         Optional<Expedition> expeditionOptional = expeditionRepository.findById(expeditionId);
         Optional<User> userOptional = userRepository.findById(userId);
@@ -217,6 +216,27 @@ public class ExpeditionService {
         }
         return false;
     }
+
+    public Report createReport(Long expeditionId, String nomination, String description, List<Long> suppliesList) {
+        Expedition expedition = expeditionRepository.findById(expeditionId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Expedition not found"));
+
+        Report report = new Report();
+        report.setNomination(nomination);
+        report.setDescription(description);
+        report.setExpedition(expedition);
+
+        if (suppliesList != null && !suppliesList.isEmpty()) {
+            List<Supplies> supplies = suppliesRepository.findAllById(suppliesList);
+            if (supplies.size() != suppliesList.size()) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Some supplies not found");
+            }
+            report.setSuppliesList(supplies);
+        }
+
+        return reportRepository.save(report);
+    }
+
 
     public Double calculateRentalCost(Long id) {
         Expedition expedition = expeditionRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Expedition not found"));
