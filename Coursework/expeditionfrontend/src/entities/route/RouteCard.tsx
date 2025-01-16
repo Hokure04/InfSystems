@@ -20,9 +20,9 @@ const RouteCard: React.FC<RouteCardProps> = ({ route }) => {
                 {/*<Typography variant="body1" style={{ marginTop: 8 }}>*/}
                 {/*    End Point: {route.endPoint}*/}
                 {/*</Typography>*/}
-                <Typography variant="body1" style={{ marginTop: 8 }}>
-                    Distance: {route.distance.toFixed(2)} km
-                </Typography>
+                {/*<Typography variant="body1" style={{ marginTop: 8 }}>*/}
+                {/*    Distance: {route.distance.toFixed(2)} km*/}
+                {/*</Typography>*/}
                 <Typography variant="h6" style={{ marginTop: 16 }}>
                     Locations:
                 </Typography>

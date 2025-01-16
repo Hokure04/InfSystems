@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState} from 'react';
 import {Card, CardContent, Typography, Grid, Button, Box} from '@mui/material';
 import { useNavigate, Link } from 'react-router-dom';
 import RouteCard from '../route/RouteCard';
@@ -17,21 +17,17 @@ interface ExpeditionCardProps {
     expedition: Expedition;
     onUpdateExpedition: (updatedExpedition: Expedition) => void;
     onApplySuccess: () => void;
+    owner: boolean;
 }
 
-const ExpeditionCard: React.FC<ExpeditionCardProps> = ({expedition, onApplySuccess,
+const ExpeditionCard: React.FC<ExpeditionCardProps> = ({expedition, onApplySuccess, owner,
                                                        }) => {
     const [showMore, setShowMore] = useState(false);
     const [openRequestModal, setOpenRequestModal] = useState(false);
 
-    const storedUser = localStorage.getItem('user');
-    const user = storedUser ? JSON.parse(storedUser) : null;
-    const userId = user?.id;
     const navigate = useNavigate();
 
-    const isParticipant =
-        Array.isArray(expedition.userList) &&
-        expedition.userList.some((participant) => participant.id === userId);
+
 
     return (
         <Card variant="elevation" style={{ marginBottom: 16 }}>
@@ -204,7 +200,8 @@ const ExpeditionCard: React.FC<ExpeditionCardProps> = ({expedition, onApplySucce
 
                         {/* Кнопка действия */}
                         <Grid>
-                            {isParticipant ? (
+
+                            {owner ? (
                                 <Button
                                     variant="contained"
                                     color="primary"
@@ -214,6 +211,7 @@ const ExpeditionCard: React.FC<ExpeditionCardProps> = ({expedition, onApplySucce
                                     Перейти
                                 </Button>
                             ) : (
+
                                 <Button
                                     variant="contained"
                                     color="primary"

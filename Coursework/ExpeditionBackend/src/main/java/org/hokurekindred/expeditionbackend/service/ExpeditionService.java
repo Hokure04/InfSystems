@@ -69,13 +69,16 @@ public class ExpeditionService {
                 user.getExpeditionList().add(expedition);
 
                 expedition.getUserApplications().put(userId, "approved");
-
+                Request request = requestRepository.findRequestByUsername(user.getUsername()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User Not Found"));
+                request.setStatus("approved");
+                requestRepository.save(request);
                 expeditionRepository.save(expedition);
                 userRepository.save(user);
 
                 return true;
             }
         }
+
         return false;
     }
 
@@ -159,6 +162,9 @@ public class ExpeditionService {
             if (status.equals(expedition.getUserApplications().get(userId))) {
                 expedition.getUserApplications().put(userId, "rejected");
                 expeditionRepository.save(expedition);
+                Request request = requestRepository.findRequestByUsername(userOptional.orElseThrow(RuntimeException::new).getUsername()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User Not Found"));
+                request.setStatus("rejected");
+                requestRepository.save(request);
                 return true;
             }
         }

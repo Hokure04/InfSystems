@@ -190,6 +190,7 @@ const ExpeditionPage: React.FC = () => {
                                     expedition={expedition}
                                     onUpdateExpedition={handleUpdateExpedition}
                                     onApplySuccess={handleApplySuccess}
+                                    owner = {true}
                                 />
                             </Box>
                         ))
@@ -207,6 +208,7 @@ const ExpeditionPage: React.FC = () => {
                                 expedition={expedition}
                                 onUpdateExpedition={handleUpdateExpedition}
                                 onApplySuccess={handleApplySuccess}
+                                owner = {false}
                             />
                         </Box>
                     ))
