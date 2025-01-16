@@ -35,8 +35,8 @@ interface User {
 }
 
 const AppMenu: React.FC = () => {
-    const [anchorElOptions, setAnchorElOptions] = useState<null | HTMLElement>(null);
-    const [anchorElImport, setAnchorElImport] = useState<null | HTMLElement>(null);
+    // const [anchorElOptions, setAnchorElOptions] = useState<null | HTMLElement>(null);
+    // const [anchorElImport, setAnchorElImport] = useState<null | HTMLElement>(null);
     const [anchorElUser, setAnchorElUser] = useState<null | HTMLElement>(null);
     const [user, setUser] = useState<any>(null);
     const [exit, setExit] = useState<boolean>(true);
@@ -55,23 +55,23 @@ const AppMenu: React.FC = () => {
         }
     }, [navigate]);
 
-    const handleOptionsMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
-        setAnchorElOptions(event.currentTarget);
-    };
-    const handleOptionsMenuClose = () => {
-        setAnchorElOptions(null);
-    };
-
-    const handleImportMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
-        setAnchorElImport(event.currentTarget);
-    };
-    const handleImportMenuClose = () => {
-        setAnchorElImport(null);
-    };
-
-    const hasUserRole = (user: User): boolean => {
-        return user?.role?.some((role: Role) => role.name === "USER") ?? false;
-    };
+    // const handleOptionsMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    //     setAnchorElOptions(event.currentTarget);
+    // };
+    // const handleOptionsMenuClose = () => {
+    //     setAnchorElOptions(null);
+    // };
+    //
+    // const handleImportMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    //     setAnchorElImport(event.currentTarget);
+    // };
+    // const handleImportMenuClose = () => {
+    //     setAnchorElImport(null);
+    // };
+    //
+    // const hasUserRole = (user: User): boolean => {
+    //     return user?.role?.some((role: Role) => role.name === "USER") ?? false;
+    // };
 
     const handleUserMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
         setFirstEnter(true);
@@ -110,7 +110,7 @@ const AppMenu: React.FC = () => {
                         Экспедиции
                     </Button>
                     <Button color="inherit" onClick={() => navigate("/create")}>
-                        Создать экспедиции
+                        Создать экспедицию
                     </Button>
                     <Button color="inherit" onClick={() => navigate("/rent")}>
                         Аренда
@@ -118,49 +118,49 @@ const AppMenu: React.FC = () => {
                     <Button color="inherit" onClick={() => navigate("/certificate")}>
                         Сертификаты
                     </Button>
-                    <Button color="inherit" onClick={handleImportMenuOpen}>
-                        Импорт
-                    </Button>
-                    <Menu
-                        anchorEl={anchorElImport}
-                        open={Boolean(anchorElImport)}
-                        onClose={handleImportMenuClose}
-                    >
-                        <MenuItem onClick={() => navigate("/flat-import")}>
-                            Импортировать квартиры
-                        </MenuItem>
-                        <MenuItem onClick={() => navigate("/flat-import/history")}>
-                            История импорта
-                        </MenuItem>
-                    </Menu>
-                    <Button color="inherit" onClick={handleOptionsMenuOpen}>
-                        Дополнительные опции
-                    </Button>
-                    <Menu
-                        anchorEl={anchorElOptions}
-                        open={Boolean(anchorElOptions)}
-                        onClose={handleOptionsMenuClose}
+                    {/*<Button color="inherit" onClick={handleImportMenuOpen}>*/}
+                    {/*    Импорт*/}
+                    {/*</Button>*/}
+                    {/*<Menu*/}
+                    {/*    anchorEl={anchorElImport}*/}
+                    {/*    open={Boolean(anchorElImport)}*/}
+                    {/*    onClose={handleImportMenuClose}*/}
+                    {/*>*/}
+                    {/*    <MenuItem onClick={() => navigate("/flat-import")}>*/}
+                    {/*        Импортировать квартиры*/}
+                    {/*    </MenuItem>*/}
+                    {/*    <MenuItem onClick={() => navigate("/flat-import/history")}>*/}
+                    {/*        История импорта*/}
+                    {/*    </MenuItem>*/}
+                    {/*</Menu>*/}
+                    {/*<Button color="inherit" onClick={handleOptionsMenuOpen}>*/}
+                    {/*    Дополнительные опции*/}
+                    {/*</Button>*/}
+                    {/*<Menu*/}
+                    {/*    anchorEl={anchorElOptions}*/}
+                    {/*    open={Boolean(anchorElOptions)}*/}
+                    {/*    onClose={handleOptionsMenuClose}*/}
 
-                    >
-                        <MenuItem onClick={() => navigate("/average-number-of-rooms")} disabled={!hasUserRole(user)}>
-                            Расчет среднего значения комнат
+                    {/*>*/}
+                    {/*    <MenuItem onClick={() => navigate("/average-number-of-rooms")} disabled={!hasUserRole(user)}>*/}
+                    {/*        Расчет среднего значения комнат*/}
 
-                        </MenuItem>
-                        <MenuItem onClick={() => navigate("/flat-with-max-area")} disabled={!hasUserRole(user)}>
-                            Найти квартиру с максимальной площадью
-                        </MenuItem>
-                        <MenuItem onClick={() => navigate("/flats-count-by-is-new")} disabled={!hasUserRole(user)}>
-                            Найти количество новых/бу квартир
-                        </MenuItem>
-                        <MenuItem onClick={() => navigate("/most-expensive-flat-without-balcony")}
-                                  disabled={!hasUserRole(user)}>
-                            Самая дорогая квартира без балкона
-                        </MenuItem>
-                        <MenuItem onClick={() => navigate("/most-expensive-flat-from-ids")}
-                                  disabled={!hasUserRole(user)}>
-                            Выбрать из трёх квартир наиболее дорогую
-                        </MenuItem>
-                    </Menu>
+                    {/*    </MenuItem>*/}
+                    {/*    <MenuItem onClick={() => navigate("/flat-with-max-area")} disabled={!hasUserRole(user)}>*/}
+                    {/*        Найти квартиру с максимальной площадью*/}
+                    {/*    </MenuItem>*/}
+                    {/*    <MenuItem onClick={() => navigate("/flats-count-by-is-new")} disabled={!hasUserRole(user)}>*/}
+                    {/*        Найти количество новых/бу квартир*/}
+                    {/*    </MenuItem>*/}
+                    {/*    <MenuItem onClick={() => navigate("/most-expensive-flat-without-balcony")}*/}
+                    {/*              disabled={!hasUserRole(user)}>*/}
+                    {/*        Самая дорогая квартира без балкона*/}
+                    {/*    </MenuItem>*/}
+                    {/*    <MenuItem onClick={() => navigate("/most-expensive-flat-from-ids")}*/}
+                    {/*              disabled={!hasUserRole(user)}>*/}
+                    {/*        Выбрать из трёх квартир наиболее дорогую*/}
+                    {/*    </MenuItem>*/}
+                    {/*</Menu>*/}
                 </Box>
                 {!exit && (
                     <>
