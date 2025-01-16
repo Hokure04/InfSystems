@@ -4,8 +4,6 @@ import {
     Toolbar,
     IconButton,
     Button,
-    Menu,
-    MenuItem,
     Typography,
     Box,
     Popover,
@@ -18,21 +16,21 @@ import {
 } from '@mui/icons-material';
 import {useNavigate} from "react-router-dom";
 
-interface Role {
-    id: number;
-    name: string;
-}
+// interface Role {
+//     id: number;
+//     name: string;
+// }
 
-interface User {
-    id: number;
-    username: string;
-    email: string;
-    name: string;
-    surname: string;
-    phoneNumber: string;
-    aboutUser: string;
-    role: Role[];
-}
+// interface User {
+//     id: number;
+//     username: string;
+//     email: string;
+//     name: string;
+//     surname: string;
+//     phoneNumber: string;
+//     aboutUser: string;
+//     role: Role[];
+// }
 
 const AppMenu: React.FC = () => {
     // const [anchorElOptions, setAnchorElOptions] = useState<null | HTMLElement>(null);
