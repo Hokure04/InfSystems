@@ -32,6 +32,8 @@ public class ExpeditionService {
     public SuppliesRepository suppliesRepository;
     @Autowired
     private PermitRepository permitRepository;
+    @Autowired
+    private RequestRepository requestRepository;
 
     public List<Expedition> findAllExpeditions() {
         return expeditionRepository.findAll();
@@ -62,19 +64,17 @@ public class ExpeditionService {
             Expedition expedition = expeditionOptional.get();
             User user = userInfoOptional.get();
 
-            if (expedition.getUserList().isEmpty()) {
+            if (!expedition.getUserList().contains(user)) {
                 expedition.getUserList().add(user);
                 user.getExpeditionList().add(expedition);
-                expedition.getUserApplications().put(userId, "approved");
-            } else {
-                if (!expedition.getUserApplications().containsKey(userId)) {
-                    expedition.getUserApplications().put(userId, "pending");
-                }
-            }
-            expeditionRepository.save(expedition);
-            userRepository.save(user);
 
-            return true;
+                expedition.getUserApplications().put(userId, "approved");
+
+                expeditionRepository.save(expedition);
+                userRepository.save(user);
+
+                return true;
+            }
         }
         return false;
     }
@@ -116,21 +116,40 @@ public class ExpeditionService {
     }*/
 
     // Метод для подачи заявки на участие в экспедиции
-    public boolean addPendingUser(Long expeditionId, Long userId) {
+    public boolean addPendingUser(Long expeditionId, Long userId, String description) {
         Optional<Expedition> expeditionOptional = expeditionRepository.findById(expeditionId);
         Optional<User> userOptional = userRepository.findById(userId);
+
         if (expeditionOptional.isPresent() && userOptional.isPresent()) {
             Expedition expedition = expeditionOptional.get();
             User user = userOptional.get();
 
-            if (!expedition.getUserList().contains(user) && !expedition.getUserApplications().containsKey(userId)) {
-                expedition.getUserApplications().put(userId, "pending");
-                expeditionRepository.save(expedition);
-                return true;
+            if (expedition.getUserList().contains(user)) {
+                return false;
             }
+
+            if (expedition.getUserApplications().containsKey(userId)) {
+                return false;
+            }
+
+            Request newRequest = Request.builder()
+                    .username(user.getUsername())
+                    .description(description)
+                    .status("pending")
+                    .expedition(expedition)
+                    .build();
+
+            requestRepository.save(newRequest);
+
+            expedition.getUserApplications().put(userId, "pending");
+            expeditionRepository.save(expedition);
+
+            return true;
         }
+
         return false;
     }
+
 
     public boolean rejectUserApplication(Long expeditionId, Long userId) {
         Optional<Expedition> expeditionOptional = expeditionRepository.findById(expeditionId);

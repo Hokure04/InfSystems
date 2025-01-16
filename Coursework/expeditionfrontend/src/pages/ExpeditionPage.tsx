@@ -91,6 +91,14 @@ const ExpeditionPage: React.FC = () => {
         );
     };
 
+    const handleApplySuccess = () => {
+        fetchExpeditions();
+        if (showUserExpeditions) {
+            fetchUserExpeditions();
+        }
+    };
+
+
     if (loading) {
         return (
             <Box
@@ -181,6 +189,7 @@ const ExpeditionPage: React.FC = () => {
                                 <ExpeditionCard
                                     expedition={expedition}
                                     onUpdateExpedition={handleUpdateExpedition}
+                                    onApplySuccess={handleApplySuccess}
                                 />
                             </Box>
                         ))
@@ -197,6 +206,7 @@ const ExpeditionPage: React.FC = () => {
                             <ExpeditionCard
                                 expedition={expedition}
                                 onUpdateExpedition={handleUpdateExpedition}
+                                onApplySuccess={handleApplySuccess}
                             />
                         </Box>
                     ))

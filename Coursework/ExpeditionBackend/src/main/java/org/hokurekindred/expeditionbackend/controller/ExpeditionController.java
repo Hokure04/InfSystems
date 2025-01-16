@@ -129,16 +129,25 @@ public class ExpeditionController {
     }*/
 
     @PostMapping("/{expeditionId}/apply/{userId}")
-    public ResponseEntity<Map<String, Object>> applyForExpedition(@PathVariable Long expeditionId, @PathVariable Long userId) {
+    public ResponseEntity<Map<String, Object>> applyForExpedition(
+            @PathVariable Long expeditionId,
+            @PathVariable Long userId,
+            @RequestBody Map<String, String> requestBody) {
+
         Map<String, Object> response = new HashMap<>();
-        boolean result = expeditionService.addPendingUser(expeditionId, userId);
+        String description = requestBody.get("description");
+
+        boolean result = expeditionService.addPendingUser(expeditionId, userId, description);
+
         if (result) {
             response.put("message", "Application submitted successfully");
+            return new ResponseEntity<>(response, HttpStatus.OK);
         } else {
             response.put("message", "Application failed");
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
         }
-        return new ResponseEntity<>(response, HttpStatus.OK);
     }
+
 
     @PostMapping("/{expeditionId}/reject/{userId}")
     public ResponseEntity<Map<String, Object>> rejectUserApplication(@PathVariable Long expeditionId, @PathVariable Long userId) {

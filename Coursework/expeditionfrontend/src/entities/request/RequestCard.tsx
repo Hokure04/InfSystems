@@ -1,32 +1,28 @@
 import React from 'react';
-import { Card, CardContent, Typography } from '@mui/material';
-import {Request} from "./Request.ts"
+import { Box, Typography, Button } from '@mui/material';
+import { Request } from './Request';
 
 interface RequestCardProps {
     request: Request;
+    onAccept: (requestId: number) => void;
+    onReject: (requestId: number) => void;
 }
 
-const RequestCard: React.FC<RequestCardProps> = ({ request }) => {
+const RequestCard: React.FC<RequestCardProps> = ({ request, onAccept, onReject }) => {
     return (
-        <Card variant="elevation" style={{ marginBottom: 16 }}>
-            <CardContent>
-                <Typography variant="h6">Request #{request.requestId}</Typography>
-                <Typography variant="body1" style={{ marginTop: 8 }}>
-                    Username: {request.username}
-                </Typography>
-                <Typography variant="body1" style={{ marginTop: 8 }}>
-                    Description: {request.description || 'N/A'}
-                </Typography>
-                <Typography variant="body1" style={{ marginTop: 8 }}>
-                    Status: {request.status || 'N/A'}
-                </Typography>
-                {request.reasonForRefusal && (
-                    <Typography variant="body1" style={{ marginTop: 8 }}>
-                        Reason for Refusal: {request.reasonForRefusal}
-                    </Typography>
-                )}
-            </CardContent>
-        </Card>
+        <Box sx={{ padding: 2, marginBottom: 2, border: '1px solid #ccc', borderRadius: 2 }}>
+            <Typography variant="h6">{request.username}</Typography>
+            <Typography variant="body2">Description: {request.description || 'N/A'}</Typography>
+            <Typography variant="body2">Status: {request.status || 'Pending'}</Typography>
+            <Box sx={{ marginTop: 2, display: 'flex', gap: 2 }}>
+                <Button variant="contained" color="primary" onClick={() => onAccept(request.requestId)}>
+                    Принять
+                </Button>
+                <Button variant="contained" color="error" onClick={() => onReject(request.requestId)}>
+                    Отклонить
+                </Button>
+            </Box>
+        </Box>
     );
 };
 

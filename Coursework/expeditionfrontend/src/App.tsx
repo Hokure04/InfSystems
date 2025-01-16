@@ -13,6 +13,7 @@ import ExVehicle from './examples/ExVehicle.tsx';
 import MapSettings from './map/MapSettings.tsx';
 import MapPage from './map/MapPage.tsx';
 import ExpeditionPage from '../src/pages/ExpeditionPage.tsx';
+import ExpeditionInfoPage from './pages/ExpeditionInfoPage.tsx';
 import RentPage from '../src/pages/RentPage.tsx'
 import CertificatePage from "./pages/CertificatePage.tsx";
 import UserProfile from "./user_profile/UserProfile.tsx";
@@ -49,7 +50,7 @@ const App: React.FC = () => {
                         <Route path="/create" element={<CreateExpeditionPage />} />
                         <Route path="/certificate" element={<CertificatePage />} />
                         <Route path="/profile" element={<UserProfile />} />
-
+                        <Route path="/expedition/:id" element={<ExpeditionInfoPage />} />
 
                         <Route path="*" element={<Navigate to="/" />} />
                     </Routes>

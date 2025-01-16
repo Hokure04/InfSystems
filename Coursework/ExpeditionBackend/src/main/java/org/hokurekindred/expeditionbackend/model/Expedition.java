@@ -1,5 +1,6 @@
 package org.hokurekindred.expeditionbackend.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
@@ -99,7 +100,7 @@ public class Expedition {
             joinColumns = @JoinColumn(name = "expedition_id"),
             inverseJoinColumns = @JoinColumn(name = "user_id")
     )
-//    @JsonManagedReference
+    @JsonBackReference
     private List<User> userList;
 
     //Map, который будет хранить пользователь желающих присоединиться к экспедиции и их статусы

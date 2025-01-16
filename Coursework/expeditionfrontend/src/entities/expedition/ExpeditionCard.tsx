@@ -1,58 +1,37 @@
 import React, { useState } from 'react';
-import { Card, CardContent, Typography, Grid, Chip, Button, Box } from '@mui/material';
-import { Expedition } from './Expedition.ts';
+import {Card, CardContent, Typography, Grid, Button, Box} from '@mui/material';
+import { useNavigate, Link } from 'react-router-dom';
 import RouteCard from '../route/RouteCard';
 import ReportCard from '../report/ReportCard';
-import RequestCard from '../request/RequestCard';
+import RequestCardOld from '../request/RequestCardOld.tsx';
 import PermitCard from '../permit/PermitCard';
 import SuppliesCard from '../supplies/SuppliesCard';
 import EquipmentCardOld from '../equipment/EquipmentCardOld';
 import VehicleCardOld from '../vehicle/VehicleCardOld';
 import UserCard from '../user/UserCard';
 import YandexMapComponent from '../../map/YandexMapComponent';
-import api from '../../api.ts';
+import RequestForm from '../../pages/Request/RequestForm.tsx';
+import { Expedition } from './Expedition';
 
 interface ExpeditionCardProps {
     expedition: Expedition;
     onUpdateExpedition: (updatedExpedition: Expedition) => void;
+    onApplySuccess: () => void;
 }
 
-const ExpeditionCard: React.FC<ExpeditionCardProps> = ({ expedition, onUpdateExpedition }) => {
-    const [loading, setLoading] = useState(false);
-    const [successMessage, setSuccessMessage] = useState<string | null>(null);
-    const [errorMessage, setErrorMessage] = useState<string | null>(null);
+const ExpeditionCard: React.FC<ExpeditionCardProps> = ({expedition, onApplySuccess,
+                                                       }) => {
     const [showMore, setShowMore] = useState(false);
+    const [openRequestModal, setOpenRequestModal] = useState(false);
 
-    const handleApply = async () => {
-        setLoading(true);
-        setSuccessMessage(null);
-        setErrorMessage(null);
+    const storedUser = localStorage.getItem('user');
+    const user = storedUser ? JSON.parse(storedUser) : null;
+    const userId = user?.id;
+    const navigate = useNavigate();
 
-        try {
-            const storedUser = localStorage.getItem('user');
-            const user = storedUser ? JSON.parse(storedUser) : null;
-            const userId = user?.id;
-
-            if (!userId) {
-                throw new Error('User ID not found in localStorage');
-            }
-
-            const response = await api.post(`/expeditions/${expedition.expeditionId}/apply/${userId}`);
-            setSuccessMessage(response.data.message || 'Application submitted successfully!');
-
-            const updatedExpeditionResponse = await api.get(`/expeditions/${expedition.expeditionId}`);
-            const updatedExpedition = updatedExpeditionResponse.data;
-
-            onUpdateExpedition(updatedExpedition);
-        } catch (error: any) {
-            console.error('Error applying for expedition:', error);
-            setErrorMessage(
-                error.response?.data?.message || 'Failed to apply for the expedition. Please try again.'
-            );
-        } finally {
-            setLoading(false);
-        }
-    };
+    const isParticipant =
+        Array.isArray(expedition.userList) &&
+        expedition.userList.some((participant) => participant.id === userId);
 
     return (
         <Card variant="elevation" style={{ marginBottom: 16 }}>
@@ -60,7 +39,15 @@ const ExpeditionCard: React.FC<ExpeditionCardProps> = ({ expedition, onUpdateExp
                 <Grid container spacing={2}>
                     {/* Основная информация о экспедиции */}
                     <Grid item xs={7}>
-                        <Typography variant="h6">{expedition.name}</Typography>
+                        <Typography variant="h6" style={{ cursor: 'pointer' }}>
+                            <Link
+                                to={`/expedition/${expedition.expeditionId}`}
+                                style={{ textDecoration: 'none', color: 'inherit' }}
+                            >
+                                {expedition.name}
+                            </Link>
+                        </Typography>
+
                         <Typography variant="body1">
                             Start Date: {new Date(expedition.startDate).toLocaleDateString()}
                         </Typography>
@@ -89,13 +76,10 @@ const ExpeditionCard: React.FC<ExpeditionCardProps> = ({ expedition, onUpdateExp
                             {showMore ? 'Показать меньше' : 'Показать больше'}
                         </Button>
 
-
-
-
-                        {/* Дополнительная информация о сущностях */}
+                        {/* Дополнительная информация */}
                         {showMore && (
                             <>
-                                {/* Информация о маршруте */}
+                                {/* Route */}
                                 {expedition.route && (
                                     <>
                                         <Typography variant="subtitle1" style={{ marginTop: 16 }}>
@@ -105,8 +89,8 @@ const ExpeditionCard: React.FC<ExpeditionCardProps> = ({ expedition, onUpdateExp
                                     </>
                                 )}
 
-                                {/* Список отчетов */}
-                                {expedition.reports.length > 0 && (
+                                {/* Reports */}
+                                {Array.isArray(expedition.reports) && expedition.reports.length > 0 && (
                                     <>
                                         <Typography variant="subtitle1" style={{ marginTop: 16 }}>
                                             Reports:
@@ -117,138 +101,132 @@ const ExpeditionCard: React.FC<ExpeditionCardProps> = ({ expedition, onUpdateExp
                                     </>
                                 )}
 
-                                {/* Запросы */}
-                                {expedition.requests.length > 0 && (
-                                    <>
-                                        <Typography variant="subtitle1" style={{ marginTop: 16 }}>
-                                            Requests:
-                                        </Typography>
-                                        {expedition.requests.map((request) => (
-                                            <RequestCard key={request.requestId} request={request} />
-                                        ))}
-                                    </>
-                                )}
-
-                                {/* Разрешения */}
-                                {expedition.permits.length > 0 && (
-                                    <>
-                                        <Typography variant="subtitle1" style={{ marginTop: 16 }}>
-                                            Permits:
-                                        </Typography>
-                                        {expedition.permits.map((permit) => (
-                                            <PermitCard key={permit.permitId} permit={permit} />
-                                        ))}
-                                    </>
-                                )}
-
-                                {/* Список снабжения */}
-                                {expedition.supplyList.length > 0 && (
-                                    <>
-                                        <Typography variant="subtitle1" style={{ marginTop: 16 }}>
-                                            Supplies:
-                                        </Typography>
-                                        {expedition.supplyList.map((supply) => (
-                                            <SuppliesCard key={supply.supplyId} supplies={supply} />
-                                        ))}
-                                    </>
-                                )}
-
-                                {/* Оборудование */}
-                                {expedition.equipmentList.length > 0 && (
-                                    <>
-                                        <Typography variant="subtitle1" style={{ marginTop: 16 }}>
-                                            Equipment:
-                                        </Typography>
-                                        {expedition.equipmentList.map((equipment) => (
-                                            <EquipmentCardOld key={equipment.equipmentId} equipment={equipment} />
-                                        ))}
-                                    </>
-                                )}
-
-                                {/* Транспорт */}
-                                {expedition.vehicleList.length > 0 && (
-                                    <>
-                                        <Typography variant="subtitle1" style={{ marginTop: 16 }}>
-                                            Vehicles:
-                                        </Typography>
-                                        {expedition.vehicleList.map((vehicle) => (
-                                            <VehicleCardOld key={vehicle.vehicleId} vehicle={vehicle} />
-                                        ))}
-                                    </>
-                                )}
-
-                                {/* Пользователи с уменьшенным размером текста */}
-                                {expedition.userList.length > 0 && (
-                                    <>
-                                        <Typography variant="subtitle1" style={{ marginTop: 16 }}>
-                                            Participants:
-                                        </Typography>
-                                        {expedition.userList.map((user) => (
-                                            <UserCard key={user.id} user={user} />
-                                        ))}
-                                    </>
-                                )}
-
-                                {/* Необходимые роли */}
-                                {expedition.requiredRoles.length > 0 && (
-                                    <>
-                                        <Typography variant="subtitle1" style={{ marginTop: 16 }}>
-                                            Required Roles:
-                                        </Typography>
-                                        <Grid container spacing={1}>
-                                            {expedition.requiredRoles.map((role, index) => (
-                                                <Grid item key={index}>
-                                                    <Chip label={role} color="secondary" />
-                                                </Grid>
+                                {/* Requests */}
+                                {Array.isArray(expedition.requests) &&
+                                    expedition.requests.length > 0 && (
+                                        <>
+                                            <Typography
+                                                variant="subtitle1"
+                                                style={{ marginTop: 16 }}
+                                            >
+                                                Requests:
+                                            </Typography>
+                                            {expedition.requests.map((request) => (
+                                                <RequestCardOld key={request.requestId} request={request} />
                                             ))}
-                                        </Grid>
-                                    </>
-                                )}
+                                        </>
+                                    )}
 
-                                {/* Заявки пользователей */}
-                                {Object.keys(expedition.userApplications).length > 0 && (
-                                    <>
-                                        <Typography variant="subtitle1" style={{ marginTop: 16 }}>
-                                            User Applications:
-                                        </Typography>
-                                        <ul>
-                                            {Object.entries(expedition.userApplications).map(([userId, status]) => (
-                                                <li key={userId}>
-                                                    User ID: {userId}, Status: {status}
-                                                </li>
+                                {/* Permits */}
+                                {Array.isArray(expedition.permits) &&
+                                    expedition.permits.length > 0 && (
+                                        <>
+                                            <Typography
+                                                variant="subtitle1"
+                                                style={{ marginTop: 16 }}
+                                            >
+                                                Permits:
+                                            </Typography>
+                                            {expedition.permits.map((permit) => (
+                                                <PermitCard key={permit.permitId} permit={permit} />
                                             ))}
-                                        </ul>
-                                    </>
-                                )}
+                                        </>
+                                    )}
+
+                                {/* Supplies */}
+                                {Array.isArray(expedition.supplyList) &&
+                                    expedition.supplyList.length > 0 && (
+                                        <>
+                                            <Typography
+                                                variant="subtitle1"
+                                                style={{ marginTop: 16 }}
+                                            >
+                                                Supplies:
+                                            </Typography>
+                                            {expedition.supplyList.map((supply) => (
+                                                <SuppliesCard key={supply.supplyId} supplies={supply} />
+                                            ))}
+                                        </>
+                                    )}
+
+                                {/* Equipment */}
+                                {Array.isArray(expedition.equipmentList) &&
+                                    expedition.equipmentList.length > 0 && (
+                                        <>
+                                            <Typography
+                                                variant="subtitle1"
+                                                style={{ marginTop: 16 }}
+                                            >
+                                                Equipment:
+                                            </Typography>
+                                            {expedition.equipmentList.map((equipment) => (
+                                                <EquipmentCardOld
+                                                    key={equipment.equipmentId}
+                                                    equipment={equipment}
+                                                />
+                                            ))}
+                                        </>
+                                    )}
+
+                                {/* Vehicles */}
+                                {Array.isArray(expedition.vehicleList) &&
+                                    expedition.vehicleList.length > 0 && (
+                                        <>
+                                            <Typography
+                                                variant="subtitle1"
+                                                style={{ marginTop: 16 }}
+                                            >
+                                                Vehicles:
+                                            </Typography>
+                                            {expedition.vehicleList.map((vehicle) => (
+                                                <VehicleCardOld key={vehicle.vehicleId} vehicle={vehicle} />
+                                            ))}
+                                        </>
+                                    )}
+
+                                {/* Users */}
+                                {Array.isArray(expedition.userList) &&
+                                    expedition.userList.length > 0 && (
+                                        <>
+                                            <Typography
+                                                variant="subtitle1"
+                                                style={{ marginTop: 16 }}
+                                            >
+                                                Participants:
+                                            </Typography>
+                                            {expedition.userList.map((user) => (
+                                                <UserCard key={user.id} user={user} />
+                                            ))}
+                                        </>
+                                    )}
                             </>
                         )}
+
+                        {/* Кнопка действия */}
                         <Grid>
-                            {/* Кнопка "Хочу участвовать" */}
-                            <Button
-                                variant="contained"
-                                color="primary"
-                                style={{ marginTop: 25 }}
-                                onClick={handleApply}
-                                disabled={loading}
-                            >
-                                {loading ? 'Submitting...' : 'Хочу участвовать'}
-                            </Button>
-
-                            {successMessage && (
-                                <Typography variant="body2" color="success" style={{ marginTop: 8 }}>
-                                    {successMessage}
-                                </Typography>
-                            )}
-
-                            {errorMessage && (
-                                <Typography variant="body2" color="error" style={{ marginTop: 8 }}>
-                                    {errorMessage}
-                                </Typography>
+                            {isParticipant ? (
+                                <Button
+                                    variant="contained"
+                                    color="primary"
+                                    style={{ marginTop: 25 }}
+                                    onClick={() => navigate(`/expedition/${expedition.expeditionId}`)}
+                                >
+                                    Перейти
+                                </Button>
+                            ) : (
+                                <Button
+                                    variant="contained"
+                                    color="primary"
+                                    style={{ marginTop: 25 }}
+                                    onClick={() => setOpenRequestModal(true)}
+                                >
+                                    Хочу участвовать
+                                </Button>
                             )}
                         </Grid>
                     </Grid>
 
-                    {/* Карта в правом верхнем углу */}
+                    {/* Карта */}
                     <Grid item xs={5}>
                         <Box
                             width="100%"
@@ -258,10 +236,22 @@ const ExpeditionCard: React.FC<ExpeditionCardProps> = ({ expedition, onUpdateExp
                             borderRadius={2}
                             overflow="hidden"
                         >
-                            <YandexMapComponent width="100%" height="100%" initialRoute={expedition.route?.startPoint || undefined} />
+                            <YandexMapComponent
+                                width="100%"
+                                height="100%"
+                                initialRoute={expedition.route?.startPoint || undefined}
+                            />
                         </Box>
                     </Grid>
                 </Grid>
+
+                {/* Модальное окно */}
+                <RequestForm
+                    expeditionId={expedition.expeditionId}
+                    open={openRequestModal}
+                    onClose={() => setOpenRequestModal(false)}
+                    onSuccess={onApplySuccess}
+                />
             </CardContent>
         </Card>
     );

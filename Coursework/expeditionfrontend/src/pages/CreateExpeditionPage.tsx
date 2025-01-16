@@ -74,10 +74,9 @@ const CreateExpeditionPage: React.FC = () => {
     };
 
     const handleRouteExport = (geoJson: any) => {
-        const coordinates = geoJson.geometry.coordinates;
         const routeData: Route = {
             routeId: 0,
-            startPoint: JSON.stringify(coordinates),
+            startPoint: JSON.stringify(geoJson),
             endPoint: "SaintPetersburg",
             distance: totalDistance,
             locations: locationsList,
@@ -235,4 +234,3 @@ const CreateExpeditionPage: React.FC = () => {
 };
 
 export default CreateExpeditionPage;
-

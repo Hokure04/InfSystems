@@ -27,10 +27,11 @@ public class Role {
     @Column(unique = true)
     @Enumerated(EnumType.STRING)
     private Roles name;
-    @ManyToMany(mappedBy = "role", fetch = FetchType.EAGER)
 
+    @ManyToMany(mappedBy = "role", fetch = FetchType.EAGER)
     @JsonIgnore
     private Set<User> users;
+
     @Override
     public String toString() {
         return String.format("Role{id=%d, name='%s'}", id, name);
